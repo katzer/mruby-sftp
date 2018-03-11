@@ -21,39 +21,46 @@
 # SOFTWARE.
 
 module SFTP
-  class Session
-    # Creates a new SFTP instance atop the given SSH connection.
+  # A wrapper around an SFTP file handle, that exposes an IO-like interface for
+  # interacting with the remote file.
+  class Handle
+    # Creates a new SFTP::Handle instance atop the given SFTP connection.
     #
-    # @param [ SSH::Session ] host Optional host name.
+    # @param [ SFTP::Session ] session The underlying SFTP session.
+    # @param [ String ]        path    The path to the file or dir.
     #
-    # @return [ SFTP::Session ]
-    def initialize(session)
+    # @return [ SFTP::Handle ]
+    def initialize(session, path)
       @session = session
-      session.on_close { close }
-      connect if session.logged_in?
+      @path    = path.freeze
     end
 
-    # If the socket is connected to the host.
+    # Opens a file on the remote server.
     #
-    # @return [ Boolean ]
-    def connected?
+    # @param [ String ] flags Determines how to open the file.
+    # @param [ Int ]    mode  The mode in case of the file has to be created.
+    #
+    # @return [ Void ]
+    def open(path, flags = 'r', mode = 0)
+      if @session.file.lstat(path).directory?
+        open_dir(path)
+      else
+        open_file(path, flags, mode)
+      end
+    end
+
+    # Returns true if the connection has been initialized.
+    #
+    # @return [ Boolean ] true if open, otherwise false.
+    def open?
       !closed?
     end
 
-    # Returns an SFTP::FileFactory instance, which can be used to mimic
-    # synchronous, IO-like file operations on a remote file via SFTP.
+    # Positions ios to the beginning of input, resetting lineno to zero.
     #
-    # @return [ SFTP::FileFactory ]
-    def file
-      FileFactory.new(self)
-    end
-
-    # Returns an SFTP::Dir instance, which can be used for searching and
-    # enumerating entries on a remote directory via SFTP.
-    #
-    # @return [ SFTP::FileFactory ]
-    def dir
-      Dir.new(self)
+    # @return [ Int ]
+    def rewind
+      seek(0)
     end
   end
 end

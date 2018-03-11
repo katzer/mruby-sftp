@@ -21,17 +21,20 @@
  * SOFTWARE.
  */
 
-#include <libssh2_sftp.h>
-#include "sftp/session.c"
-#include "sftp/file.c"
+#include "file_factory.h"
+#include "session.h"
+#include "handle.h"
+#include "file.h"
+#include "stat.h"
+
 #include "mruby.h"
+
+#include <libssh2_sftp.h>
 
 void
 mrb_mruby_sftp_gem_init (mrb_state *mrb)
 {
-    struct RClass *ftp;
-
-    ftp = mrb_define_module(mrb, "SFTP");
+    struct RClass *ftp = mrb_define_module(mrb, "SFTP");
 
     mrb_define_const(mrb, ftp, "NO_SUCH_FILE_ERROR",   mrb_fixnum_value(LIBSSH2_FX_NO_SUCH_FILE));
     mrb_define_const(mrb, ftp, "NO_SUCH_PATH_ERROR",   mrb_fixnum_value(LIBSSH2_FX_NO_SUCH_PATH));
@@ -48,7 +51,10 @@ mrb_mruby_sftp_gem_init (mrb_state *mrb)
     mrb_define_const(mrb, ftp, "NO_CONNECTION_ERROR",  mrb_fixnum_value(LIBSSH2_FX_NO_CONNECTION));
     mrb_define_const(mrb, ftp, "EOF",                  mrb_fixnum_value(LIBSSH2_FX_EOF));
 
+    mrb_mruby_sftp_file_factory_init(mrb);
     mrb_mruby_sftp_session_init(mrb);
+    mrb_mruby_sftp_handle_init(mrb);
+    mrb_mruby_sftp_stat_init(mrb);
     mrb_mruby_sftp_file_init(mrb);
 }
 

@@ -21,39 +21,52 @@
 # SOFTWARE.
 
 module SFTP
-  class Session
-    # Creates a new SFTP instance atop the given SSH connection.
+  # A convenience class for working with remote directories. It provides methods
+  # for searching and enumerating directory entries.
+  class Dir
+    include Enumerable
+
+    # Creates a new SFTP::Dir instance atop the given SFTP connection.
     #
-    # @param [ SSH::Session ] host Optional host name.
+    # @param [ SFTP::Session ] session The underlying SFTP session.
     #
-    # @return [ SFTP::Session ]
+    # @return [ Void ]
     def initialize(session)
       @session = session
-      session.on_close { close }
-      connect if session.logged_in?
     end
 
-    # If the socket is connected to the host.
+    # Calls the block once for each entry in the named directory on the remote
+    # server. Yields the file name to the block.
     #
-    # @return [ Boolean ]
-    def connected?
-      !closed?
+    # @param [ String ] path The path of the remote directory.
+    # @param [ Proc ]   proc The block to yield.
+    #
+    # @return [ Void ]
+    def foreach(path, &block)
+      return to_enum(:each, path) unless block
+
+      io = Handle.new(@session, path)
+      io.open_dir
+
+      loop { break unless (line = io.gets) && yield(line) }
+    ensure
+      io.close if io
     end
 
-    # Returns an SFTP::FileFactory instance, which can be used to mimic
-    # synchronous, IO-like file operations on a remote file via SFTP.
-    #
-    # @return [ SFTP::FileFactory ]
-    def file
-      FileFactory.new(self)
-    end
+    # To be enumerable
+    alias each foreach
 
-    # Returns an SFTP::Dir instance, which can be used for searching and
-    # enumerating entries on a remote directory via SFTP.
+    # Returns an array of names representing the items in the given remote dir.
     #
-    # @return [ SFTP::FileFactory ]
-    def dir
-      Dir.new(self)
+    # @param [ String ] path The path of the remote directory.
+    #
+    # @return [ Array<String> ]
+    def entries(path)
+      result = []
+
+      foreach(path) { |name| result << name }
+
+      result
     end
   end
 end
