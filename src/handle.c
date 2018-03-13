@@ -34,11 +34,11 @@
 #include <string.h>
 #include <libssh2_sftp.h>
 
-static mrb_sym CUR;
-static mrb_sym SET;
-static mrb_sym TYPE;
-static mrb_sym PATH;
-static mrb_sym SESSION;
+static mrb_sym SYM_CUR;
+static mrb_sym SYM_SET;
+static mrb_sym SYM_TYPE;
+static mrb_sym SYM_PATH;
+static mrb_sym SYM_SESSION;
 
 static void
 mrb_sftp_handle_free (mrb_state *mrb, void *p)
@@ -75,13 +75,13 @@ mrb_sftp_raise_unless_opened (mrb_state *mrb, LIBSSH2_SFTP_HANDLE *handle)
 static int
 mrb_sftp_type (mrb_state *mrb, mrb_value self)
 {
-    return mrb_fixnum(mrb_attr_get(mrb, self, TYPE));
+    return mrb_fixnum(mrb_attr_get(mrb, self, SYM_TYPE));
 }
 
 static const char*
 mrb_sftp_path (mrb_state *mrb, mrb_value self, int *len)
 {
-    mrb_value path = mrb_iv_get(mrb, self, PATH);
+    mrb_value path = mrb_iv_get(mrb, self, SYM_PATH);
 
     if (len) {
         *len = mrb_string_value_len(mrb, path);
@@ -103,7 +103,7 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
 
     if (DATA_PTR(self)) return;
 
-    session = mrb_iv_get(mrb, self, SESSION);
+    session = mrb_attr_get(mrb, self, SYM_SESSION);
     sftp    = mrb_sftp_session(session);
     path    = mrb_sftp_path(mrb, self, &len);
 
@@ -123,7 +123,7 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
 
     mrb_data_init(self, data, &mrb_sftp_handle_type);
 
-    mrb_iv_set(mrb, self, TYPE, mrb_fixnum_value(type));
+    mrb_iv_set(mrb, self, SYM_TYPE, mrb_fixnum_value(type));
 }
 
 static mrb_value
@@ -204,21 +204,21 @@ mrb_sftp_f_tell (mrb_state *mrb, mrb_value self)
 static mrb_value
 mrb_sftp_f_seek (mrb_state *mrb, mrb_value self)
 {
-    mrb_int offset = 0;
-    mrb_sym whence = SET;
+    mrb_int offSYM_SET = 0;
+    mrb_sym whence = SYM_SET;
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
     mrb_sftp_raise_unless_opened(mrb, handle);
 
-    mrb_get_args(mrb, "i|n", &offset, &whence);
+    mrb_get_args(mrb, "i|n", &offSYM_SET, &whence);
 
-    if (CUR == whence) {
-        offset += libssh2_sftp_tell64(handle);
+    if (SYM_CUR == whence) {
+        offSYM_SET += libssh2_sftp_tell64(handle);
     } else
-    if (SET != whence) {
+    if (SYM_SET != whence) {
         mrb_raise(mrb, E_RUNTIME_ERROR, "Unknown seek option for SFTP handle.");
     }
 
-    libssh2_sftp_seek64(handle, offset);
+    libssh2_sftp_seek64(handle, offSYM_SET);
 
     return mrb_fixnum_value(libssh2_sftp_tell64(handle));
 }
@@ -268,11 +268,11 @@ mrb_mruby_sftp_handle_init (mrb_state *mrb)
 
     MRB_SET_INSTANCE_TT(cls, MRB_TT_DATA);
 
-    CUR     = mrb_intern_static(mrb, "CUR", 3);
-    SET     = mrb_intern_static(mrb, "SET", 3);
-    TYPE    = mrb_intern_static(mrb, "type", 4);
-    PATH    = mrb_intern_static(mrb, "@path", 5);
-    SESSION = mrb_intern_static(mrb, "@session", 8);
+    SYM_CUR     = mrb_intern_static(mrb, "CUR", 3);
+    SYM_SET     = mrb_intern_static(mrb, "SET", 3);
+    SYM_TYPE    = mrb_intern_static(mrb, "type", 4);
+    SYM_PATH    = mrb_intern_static(mrb, "@path", 5);
+    SYM_SESSION = mrb_intern_static(mrb, "@session", 8);
 
     mrb_define_method(mrb, cls, "open_dir", mrb_sftp_f_open_dir,  MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "open_file",mrb_sftp_f_open_file, MRB_ARGS_OPT(2));

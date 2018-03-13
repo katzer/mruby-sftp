@@ -25,4 +25,5 @@ MRuby::Gem::Specification.new('mruby-sftp') do |spec|
   spec.authors = 'Sebastian Katzer'
   spec.summary = 'SFTP client for mruby'
   spec.add_dependency 'mruby-ssh', github: 'katzer/mruby-ssh'
+  spec.add_test_dependency 'mruby-print'
 end
