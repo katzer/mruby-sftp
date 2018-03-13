@@ -29,7 +29,6 @@ module SFTP
     # @return [ SFTP::Session ]
     def initialize(session)
       @session = session
-      session.on_close { close }
       connect if session.logged_in?
     end
 

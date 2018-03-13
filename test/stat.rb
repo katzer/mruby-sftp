@@ -201,14 +201,14 @@ end
 
 assert 'SFTP::Stat', 'SFTP' do
   SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
-    dummy = sftp.file.stat('I am bad')
+    dummy = sftp.stat('I am bad')
     assert_equal SFTP::Stat::T_UNKNOWN, dummy.type
 
-    dir = sftp.file.stat('/pub')
+    dir = sftp.stat('/pub')
     assert_true dir.directory?
     assert_equal 0, dir.size
 
-    file = sftp.file.stat('readme.txt')
+    file = sftp.stat('readme.txt')
     assert_true file.file?
     assert_equal 600, file.umode
     assert_equal 403, file.size

@@ -33,14 +33,17 @@ assert 'SFTP::Session.new' do
   assert_false sftp.connected?
 end
 
-assert 'SSH::sftp' do
-  SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
-    assert_kind_of SFTP::Session, ssh.sftp
-    assert_true ssh.sftp.connected?
-  end
+dummy = SFTP::Session.new(SSH::Session.new)
+
+assert 'SFTP::Session#file' do
+  assert_kind_of SFTP::FileFactory, dummy.file
 end
 
-assert 'SFTP::start' do
+assert 'SFTP::Session#dir' do
+  assert_kind_of SFTP::Dir, dummy.dir
+end
+
+assert 'SFTP.start' do
   session = nil
 
   SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
@@ -52,12 +55,77 @@ assert 'SFTP::start' do
   assert_true session.closed?
 end
 
-assert 'SFTP::Session#file' do
-  sftp = SFTP::Session.new(SSH::Session.new)
-  assert_kind_of SFTP::FileFactory, sftp.file
+assert 'SSH#sftp' do
+  SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
+    sftp = ssh.sftp
+    assert_kind_of SFTP::Session, sftp
+    assert_equal sftp, ssh.sftp
+    assert_true sftp.connected?
+  end
 end
 
-assert 'SFTP::Session#dir' do
-  sftp = SFTP::Session.new(SSH::Session.new)
-  assert_kind_of SFTP::Dir, sftp.dir
+assert 'SFTP#connect' do
+  ssh  = SSH::Session.new
+  sftp = SFTP::Session.new(ssh)
+
+  assert_false sftp.connected?
+  assert_raise(RuntimeError) { sftp.connect }
+  assert_false sftp.connected?
+
+  ssh.connect('test.rebex.net')
+  assert_raise(RuntimeError) { sftp.connect }
+  assert_false sftp.connected?
+
+  ssh.login('demo', 'password')
+  assert_nothing_raised { sftp.connect }
+  assert_true sftp.connected?
+
+  SSH.shutdown
+  assert_false sftp.connected?
+end
+
+SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
+  sftp = ssh.sftp
+
+  assert 'SSH#sftp' do
+    assert_kind_of SFTP::Session, sftp
+    assert_equal sftp, ssh.sftp
+    assert_true sftp.connected?
+  end
+
+  assert 'SFTP::Session#exist?' do
+    assert_raise(RuntimeError) { dummy.exist? '/pub' }
+    assert_raise(ArgumentError) { sftp.exist? }
+    assert_true  sftp.exist? '/pub'
+    assert_true  sftp.exist? 'readme.txt'
+    assert_false sftp.exist? 'I am wrong'
+  end
+
+  assert 'SFTP::Session#realpath' do
+    assert_raise(RuntimeError) { dummy.realpath('pub') }
+    assert_raise(ArgumentError) { sftp.realpath }
+    assert_equal '/pub', sftp.realpath('pub')
+  end
+
+  assert 'SFTP::Session#stat' do
+    assert_raise(RuntimeError) { dummy.stat('/pub') }
+    assert_raise(ArgumentError) { sftp.stat }
+    assert_kind_of SFTP::Stat, sftp.stat('/pub')
+  end
+
+  assert 'SFTP::Session#lstat' do
+    assert_raise(RuntimeError) { dummy.lstat('/pub') }
+    assert_raise(ArgumentError) { sftp.lstat }
+    assert_kind_of SFTP::Stat, sftp.lstat('/pub')
+  end
+
+  assert 'SFTP::Session#last_errno' do
+    sftp.exist? 'I/am/wrong'
+    assert_equal SFTP::NO_SUCH_FILE, sftp.last_errno
+  end
+
+  assert 'SFTP#close' do
+    ssh.close
+    assert_false sftp.connected?
+  end
 end

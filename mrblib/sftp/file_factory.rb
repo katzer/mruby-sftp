@@ -20,23 +20,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-dummy = SFTP::Session.new(SSH::Session.new)
+module SFTP
+  # A factory class for opening files and returning SFTP::File instances that
+  # wrap the SFTP handles that represent them.
+  class FileFactory
+    # Creates a new SFTP::FileFactory instance atop the given SFTP connection.
+    #
+    # @param [ SFTP::Session ] session The underlying SFTP session.
+    #
+    # @return [ Void ]
+    def initialize(session)
+      @session = session
+    end
 
-assert 'SFTP::FileFactory' do
-  assert_kind_of Class, SFTP::FileFactory
-end
-
-assert 'SFTP::FileFactory#initialize' do
-  assert_raise(ArgumentError) { SFTP::FileFactory.new }
-  assert_nothing_raised { SFTP::FileFactory.new(dummy) }
-end
-
-assert 'SFTP::FileFactory#directory?' do
-  SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
-    assert_raise(RuntimeError) { dummy.file.directory? '/pub' }
-    assert_raise(ArgumentError) { sftp.file.directory? }
-    assert_true  sftp.file.directory? '/pub'
-    assert_false sftp.file.directory? 'readme.txt'
-    assert_false sftp.file.directory? 'I am wrong'
+    # Returns true if the argument refers to a directory on the remote host.
+    #
+    # @param [ String ] path The path to the remote file.
+    #
+    # @return [ Boolean ]
+    def directory?(path)
+      @session.lstat(path).directory?
+    end
   end
 end

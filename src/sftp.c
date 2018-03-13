@@ -21,7 +21,6 @@
  * SOFTWARE.
  */
 
-#include "file_factory.h"
 #include "session.h"
 #include "handle.h"
 #include "file.h"
@@ -36,22 +35,21 @@ mrb_mruby_sftp_gem_init (mrb_state *mrb)
 {
     struct RClass *ftp = mrb_define_module(mrb, "SFTP");
 
-    mrb_define_const(mrb, ftp, "NO_SUCH_FILE_ERROR",   mrb_fixnum_value(LIBSSH2_FX_NO_SUCH_FILE));
-    mrb_define_const(mrb, ftp, "NO_SUCH_PATH_ERROR",   mrb_fixnum_value(LIBSSH2_FX_NO_SUCH_PATH));
-    mrb_define_const(mrb, ftp, "PERMISSION_ERROR",     mrb_fixnum_value(LIBSSH2_FX_PERMISSION_DENIED));
-    mrb_define_const(mrb, ftp, "FILE_EXIST_ERROR",     mrb_fixnum_value(LIBSSH2_FX_FILE_ALREADY_EXISTS));
-    mrb_define_const(mrb, ftp, "WRITE_PROTECT_ERROR",  mrb_fixnum_value(LIBSSH2_FX_WRITE_PROTECT));
-    mrb_define_const(mrb, ftp, "WRITE_PROTECT_ERROR",  mrb_fixnum_value(LIBSSH2_FX_WRITE_PROTECT));
-    mrb_define_const(mrb, ftp, "OUT_OF_SPACE_ERROR",   mrb_fixnum_value(LIBSSH2_FX_NO_SPACE_ON_FILESYSTEM));
-    mrb_define_const(mrb, ftp, "OUT_OF_SPACE_ERROR",   mrb_fixnum_value(LIBSSH2_FX_NO_SPACE_ON_FILESYSTEM));
-    mrb_define_const(mrb, ftp, "DIR_NOT_EMPTY_ERROR",  mrb_fixnum_value(LIBSSH2_FX_DIR_NOT_EMPTY));
-    mrb_define_const(mrb, ftp, "NOT_A_DIR_ERROR",      mrb_fixnum_value(LIBSSH2_FX_NOT_A_DIRECTORY));
-    mrb_define_const(mrb, ftp, "INVALID_NAME_ERROR",   mrb_fixnum_value(LIBSSH2_FX_INVALID_FILENAME));
-    mrb_define_const(mrb, ftp, "LINK_LOOP_ERROR",      mrb_fixnum_value(LIBSSH2_FX_LINK_LOOP));
-    mrb_define_const(mrb, ftp, "NO_CONNECTION_ERROR",  mrb_fixnum_value(LIBSSH2_FX_NO_CONNECTION));
-    mrb_define_const(mrb, ftp, "EOF",                  mrb_fixnum_value(LIBSSH2_FX_EOF));
+    mrb_define_const(mrb, ftp, "NO_SUCH_FILE",   mrb_fixnum_value(LIBSSH2_FX_NO_SUCH_FILE));
+    mrb_define_const(mrb, ftp, "NO_SUCH_PATH",   mrb_fixnum_value(LIBSSH2_FX_NO_SUCH_PATH));
+    mrb_define_const(mrb, ftp, "PERMISSION",     mrb_fixnum_value(LIBSSH2_FX_PERMISSION_DENIED));
+    mrb_define_const(mrb, ftp, "FILE_EXIST",     mrb_fixnum_value(LIBSSH2_FX_FILE_ALREADY_EXISTS));
+    mrb_define_const(mrb, ftp, "WRITE_PROTECT",  mrb_fixnum_value(LIBSSH2_FX_WRITE_PROTECT));
+    mrb_define_const(mrb, ftp, "WRITE_PROTECT",  mrb_fixnum_value(LIBSSH2_FX_WRITE_PROTECT));
+    mrb_define_const(mrb, ftp, "OUT_OF_SPACE",   mrb_fixnum_value(LIBSSH2_FX_NO_SPACE_ON_FILESYSTEM));
+    mrb_define_const(mrb, ftp, "OUT_OF_SPACE",   mrb_fixnum_value(LIBSSH2_FX_NO_SPACE_ON_FILESYSTEM));
+    mrb_define_const(mrb, ftp, "DIR_NOT_EMPTY",  mrb_fixnum_value(LIBSSH2_FX_DIR_NOT_EMPTY));
+    mrb_define_const(mrb, ftp, "NOT_A_DIR",      mrb_fixnum_value(LIBSSH2_FX_NOT_A_DIRECTORY));
+    mrb_define_const(mrb, ftp, "INVALID_NAME",   mrb_fixnum_value(LIBSSH2_FX_INVALID_FILENAME));
+    mrb_define_const(mrb, ftp, "LINK_LOOP",      mrb_fixnum_value(LIBSSH2_FX_LINK_LOOP));
+    mrb_define_const(mrb, ftp, "NO_CONNECTION",  mrb_fixnum_value(LIBSSH2_FX_NO_CONNECTION));
+    mrb_define_const(mrb, ftp, "EOF",            mrb_fixnum_value(LIBSSH2_FX_EOF));
 
-    mrb_mruby_sftp_file_factory_init(mrb);
     mrb_mruby_sftp_session_init(mrb);
     mrb_mruby_sftp_handle_init(mrb);
     mrb_mruby_sftp_stat_init(mrb);

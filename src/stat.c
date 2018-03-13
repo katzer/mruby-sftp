@@ -24,14 +24,15 @@
 #include "stat.h"
 
 #include "mruby.h"
-#include "mruby/variable.h"
 
 #include <libssh2_sftp.h>
+
+static mrb_sym MOD;
 
 static mrb_value
 mrb_sftp_f_type (mrb_state *mrb, mrb_value self)
 {
-    mrb_value mode = mrb_iv_get(mrb, self, mrb_intern_static(mrb, "@mode", 5));
+    mrb_value mode = mrb_attr_get(mrb, self, MOD);
     unsigned int m = mrb_fixnum(mode);
 
     if (LIBSSH2_SFTP_S_ISLNK(m))
@@ -67,6 +68,8 @@ mrb_mruby_sftp_stat_init (mrb_state *mrb)
     cls = mrb_define_class_under(mrb, ftp, "Stat", mrb->object_class);
 
     mrb_define_method(mrb, cls, "type", mrb_sftp_f_type, MRB_ARGS_NONE());
+
+    MOD = mrb_intern_static(mrb, "@mode", 5);
 
     mrb_define_const(mrb, cls, "T_REGULAR", mrb_fixnum_value(LIBSSH2_SFTP_TYPE_REGULAR));
     mrb_define_const(mrb, cls, "T_DIRECTORY", mrb_fixnum_value(LIBSSH2_SFTP_TYPE_DIRECTORY));

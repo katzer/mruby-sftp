@@ -31,7 +31,7 @@ extern "C" {
 
 struct mrb_sftp_handle
 {
-    void *session;
+    struct RData *session;
     LIBSSH2_SFTP_HANDLE *handle;
 };
 

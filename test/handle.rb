@@ -90,10 +90,13 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |ftp|
   end
 
   assert 'SFTP::Handle#close' do
-    assert_nothing_raised { dummy.close }
-    assert_nothing_raised { dir.close }
-    assert_nothing_raised { file.close }
-    assert_true dir.closed?
+    dummy.close
+    assert_true dummy.closed?
+
+    file.close
     assert_true file.closed?
+
+    ftp.close
+    assert_true dir.closed?
   end
 end

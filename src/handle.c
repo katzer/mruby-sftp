@@ -28,6 +28,7 @@
 #include "mruby/class.h"
 #include "mruby/string.h"
 #include "mruby/variable.h"
+#include "mruby/ext/sftp.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -36,6 +37,8 @@
 static mrb_sym CUR;
 static mrb_sym SET;
 static mrb_sym TYPE;
+static mrb_sym PATH;
+static mrb_sym SESSION;
 
 static void
 mrb_sftp_handle_free (mrb_state *mrb, void *p)
@@ -46,7 +49,7 @@ mrb_sftp_handle_free (mrb_state *mrb, void *p)
 
     data = (mrb_sftp_handle_t *)p;
 
-    if (data->handle && ((struct RData *)data->session)->data) {
+    if (data->handle && data->session->data && mrb_ssh_initialized()) {
         libssh2_sftp_close_handle(data->handle);
     }
 
@@ -59,14 +62,13 @@ static LIBSSH2_SFTP_HANDLE *
 mrb_sftp_handle (mrb_state *mrb, mrb_value self)
 {
     mrb_sftp_handle_t *data = DATA_PTR(self);
-
     return data ? data->handle : NULL;
 }
 
 static void
 mrb_sftp_raise_unless_opened (mrb_state *mrb, LIBSSH2_SFTP_HANDLE *handle)
 {
-    if (handle) return;
+    if (handle && mrb_ssh_initialized()) return;
     mrb_raise(mrb, E_RUNTIME_ERROR, "SFTP handle not opened.");
 }
 
@@ -79,7 +81,7 @@ mrb_sftp_type (mrb_state *mrb, mrb_value self)
 static const char*
 mrb_sftp_path (mrb_state *mrb, mrb_value self, int *len)
 {
-    mrb_value path = mrb_iv_get(mrb, self, mrb_intern_static(mrb, "@path", 5));
+    mrb_value path = mrb_iv_get(mrb, self, PATH);
 
     if (len) {
         *len = mrb_string_value_len(mrb, path);
@@ -101,8 +103,8 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
 
     if (DATA_PTR(self)) return;
 
-    session = mrb_iv_get(mrb, self, mrb_intern_static(mrb, "@session", 8));
-    sftp    = DATA_PTR(session);
+    session = mrb_iv_get(mrb, self, SESSION);
+    sftp    = mrb_sftp_session(session);
     path    = mrb_sftp_path(mrb, self, &len);
 
     if (!sftp) {
@@ -195,6 +197,7 @@ mrb_sftp_f_tell (mrb_state *mrb, mrb_value self)
 {
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
     mrb_sftp_raise_unless_opened(mrb, handle);
+
     return mrb_fixnum_value(libssh2_sftp_tell64(handle));
 }
 
@@ -224,8 +227,6 @@ static mrb_value
 mrb_sftp_f_gets (mrb_state *mrb, mrb_value self)
 {
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
-    int type                    = mrb_sftp_type(mrb, self);
-
     mrb_sftp_raise_unless_opened(mrb, handle);
 
     if (mrb_sftp_type(mrb, self) == LIBSSH2_SFTP_OPENDIR) {
@@ -249,7 +250,12 @@ mrb_sftp_f_close (mrb_state *mrb, mrb_value self)
 static mrb_value
 mrb_sftp_f_closed (mrb_state *mrb, mrb_value self)
 {
-    return mrb_bool_value(DATA_PTR(self) ? FALSE : TRUE);
+    mrb_sftp_handle_t *data = DATA_PTR(self);
+
+    if (!(data && mrb_ssh_initialized()))
+        return mrb_true_value();
+
+    return mrb_bool_value(data->session->data ? FALSE : TRUE);
 }
 
 void
@@ -262,11 +268,13 @@ mrb_mruby_sftp_handle_init (mrb_state *mrb)
 
     MRB_SET_INSTANCE_TT(cls, MRB_TT_DATA);
 
-    CUR  = mrb_intern_static(mrb, "CUR", 3);
-    SET  = mrb_intern_static(mrb, "SET", 3);
-    TYPE = mrb_intern_static(mrb, "type", 5);
+    CUR     = mrb_intern_static(mrb, "CUR", 3);
+    SET     = mrb_intern_static(mrb, "SET", 3);
+    TYPE    = mrb_intern_static(mrb, "type", 4);
+    PATH    = mrb_intern_static(mrb, "@path", 5);
+    SESSION = mrb_intern_static(mrb, "@session", 8);
 
-    mrb_define_method(mrb, cls, "open_dir", mrb_sftp_f_open_dir, MRB_ARGS_NONE());
+    mrb_define_method(mrb, cls, "open_dir", mrb_sftp_f_open_dir,  MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "open_file",mrb_sftp_f_open_file, MRB_ARGS_OPT(2));
     mrb_define_method(mrb, cls, "tell",     mrb_sftp_f_tell,   MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "seek",     mrb_sftp_f_seek,   MRB_ARGS_ARG(1,1));

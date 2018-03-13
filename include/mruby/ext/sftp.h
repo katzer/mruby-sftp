@@ -28,16 +28,19 @@
 extern "C" {
 #endif
 
+#include "mruby.h"
 #include "mruby/ext/ssh.h"
 #include <libssh2_sftp.h>
 
 struct mrb_sftp
 {
-    mrb_sftp_t *ssh;
+    struct RData *session;
     LIBSSH2_SFTP *sftp;
 };
 
 typedef struct mrb_sftp mrb_sftp_t;
+
+LIBSSH2_SFTP* mrb_sftp_session (mrb_value self);
 
 #ifdef __cplusplus
 }
