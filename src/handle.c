@@ -130,7 +130,7 @@ static mrb_value
 mrb_sftp_readdir (mrb_state *mrb, mrb_value self)
 {
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
-    char mem[512];
+    char mem[256];
     int mem_len;
 
     mem_len = libssh2_sftp_readdir(handle, mem, sizeof(mem), NULL);
