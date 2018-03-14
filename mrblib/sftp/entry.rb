@@ -58,12 +58,5 @@ module SFTP
     def directory?
       @stats.directory?
     end
-
-    # To look like a simple string.
-    #
-    # @return [ String ]
-    def to_s
-      name.to_s
-    end
   end
 end
