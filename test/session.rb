@@ -119,11 +119,12 @@ SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
     assert_kind_of SFTP::Stat, sftp.lstat('/pub')
   end
 
-  # assert 'SFTP::Session#fstat' do
-  #   assert_raise(RuntimeError) { dummy.fstat('/pub') }
-  #   assert_raise(ArgumentError) { sftp.fstat }
-  #   assert_kind_of SFTP::Stat, sftp.fstat('/pub')
-  # end
+  assert 'SFTP::Session#fstat' do
+    assert_raise(RuntimeError) { dummy.fstat('/pub') }
+    assert_raise(ArgumentError) { sftp.fstat }
+    assert_kind_of SFTP::Stat, sftp.fstat('/pub')
+    assert_true sftp.fstat('/pub').directory?
+  end
 
   assert 'SFTP::Session#last_errno' do
     sftp.exist? 'I/am/wrong'

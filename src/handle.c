@@ -72,7 +72,7 @@ mrb_sftp_handle_free (mrb_state *mrb, void *p)
 
 static mrb_data_type const mrb_sftp_handle_type = { "SFTP::Handle", mrb_sftp_handle_free };
 
-static LIBSSH2_SFTP_HANDLE *
+LIBSSH2_SFTP_HANDLE *
 mrb_sftp_handle (mrb_state *mrb, mrb_value self)
 {
     mrb_sftp_handle_t *data = DATA_PTR(self);

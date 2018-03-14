@@ -199,6 +199,12 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |ftp|
     assert_kind_of String, lines.last
   end
 
+  assert 'SFTP::Handle#stat' do
+    assert_raise(RuntimeError) { dummy.stat }
+    assert_kind_of SFTP::Stat, file.stat
+    assert_true file.stat.file?
+  end
+
   assert 'SFTP::Handle#close' do
     dummy.close
     assert_true dummy.closed?

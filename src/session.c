@@ -22,10 +22,12 @@
  */
 
 #include "session.h"
+#include "handle.h"
 
 #include "mruby.h"
 #include "mruby/data.h"
 #include "mruby/class.h"
+#include "mruby/string.h"
 #include "mruby/ext/ssh.h"
 #include "mruby/ext/sftp.h"
 #include "mruby/variable.h"
@@ -75,16 +77,28 @@ mrb_sftp_raise_unless_connected (mrb_state *mrb, LIBSSH2_SFTP *sftp)
 static int
 mrb_sftp_stat (mrb_state *mrb, mrb_value self, LIBSSH2_SFTP_ATTRIBUTES *attrs, int type)
 {
-    const char *path;
-    mrb_int len;
+    mrb_value obj;
     int ret;
 
     LIBSSH2_SFTP *sftp = mrb_sftp_session(self);
+    LIBSSH2_SFTP_HANDLE *handle;
+
     mrb_sftp_raise_unless_connected(mrb, sftp);
 
-    mrb_get_args(mrb, "s", &path, &len);
+    mrb_get_args(mrb, "o", &obj);
 
-    while ((ret = libssh2_sftp_stat_ex(sftp, path, len, type, attrs)) == LIBSSH2_ERROR_EAGAIN);
+    if (mrb_string_p(obj)) {
+        while ((ret = libssh2_sftp_stat_ex(sftp, RSTRING_PTR(obj), RSTRING_LEN(obj), type, attrs)) == LIBSSH2_ERROR_EAGAIN);
+        return ret;
+    }
+
+    handle = mrb_sftp_handle(mrb, obj);
+
+    if (!handle) {
+        mrb_raise(mrb, E_RUNTIME_ERROR, "SFTP handle not opened.");
+    }
+
+    while ((ret = libssh2_sftp_fstat(handle, attrs)) == LIBSSH2_ERROR_EAGAIN);
 
     return ret;
 }
@@ -216,7 +230,7 @@ static mrb_value
 mrb_sftp_f_fstat (mrb_state *mrb, mrb_value self)
 {
     LIBSSH2_SFTP_ATTRIBUTES attrs;
-    mrb_sftp_stat(mrb, self, &attrs, LIBSSH2_SFTP_LSTAT);
+    mrb_sftp_stat(mrb, self, &attrs, LIBSSH2_SFTP_STAT);
 
     return mrb_sftp_stat_obj(mrb, attrs);
 }
