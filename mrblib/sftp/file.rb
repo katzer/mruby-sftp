@@ -21,27 +21,33 @@
 # SOFTWARE.
 
 module SFTP
-  class File
-#     # The path of the file.
-#     #
-#     # @return [ String ]
-#     attr_reader :path
+  class File < Handle
+    # To be enumerable
+    include Enumerable
 
-#     # To be compliant with ::File and Net::SFTP
-#     alias directory? dir?
+    # Opens a file on the remote server.
+    #
+    # @param [ String ] flags Determines how to open the file.
+    # @param [ Int ]    mode  The mode in case of the file has to be created.
+    #
+    # @return [ Void ]
+    def open(flags = 'r', mode = 0)
+      open_file(flags, mode)
+    end
 
-#     # Returns true if the named file exists and has a zero size.
-#     #
-#     # @return [ Boolean ]
-#     def zero?
-#       size == 0
-#     end
-
-#     private
-
-#     # A reference to the SFTP session object.
-#     #
-#     # @return [ SFTP::Session ]
-#     attr_reader :session
+    # Calls the block once for each line in the named file on the remote server.
+    # Yields the line to the block.
+    #
+    # @param [ Hash ] opts The path of the remote directory.
+    # @param [ Proc ] proc Optional config settings { chomp: true }
+    #
+    # @return [ Void ]
+    def each(opts = { chomp: true }, &block)
+      return to_enum(:each, opts) unless block
+      open
+      yield(gets(opts)) until eof?
+    ensure
+      close
+    end
   end
 end

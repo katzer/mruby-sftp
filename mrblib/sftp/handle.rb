@@ -35,17 +35,22 @@ module SFTP
       @path    = path.freeze
     end
 
+    # The path to the file or dir.
+    #
+    # @return [ String ]
+    attr_reader :path
+
     # Opens a file on the remote server.
     #
     # @param [ String ] flags Determines how to open the file.
     # @param [ Int ]    mode  The mode in case of the file has to be created.
     #
     # @return [ Void ]
-    def open(path, flags = 'r', mode = 0)
+    def open(flags = 'r', mode = 0)
       if @session.file.lstat(path).directory?
-        open_dir(path)
+        open_dir
       else
-        open_file(path, flags, mode)
+        open_file(flags, mode)
       end
     end
 
