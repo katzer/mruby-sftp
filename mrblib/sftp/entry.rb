@@ -21,48 +21,49 @@
 # SOFTWARE.
 
 module SFTP
-  # A convenience class for working with remote directories. It provides methods
-  # for searching and enumerating directory entries.
-  class Dir
-    # To be enumerable
-    include Enumerable
-
-    # Creates a new SFTP::Dir instance atop the given SFTP connection.
+  # Represents a single named item on the remote server.
+  # This includes the name and the attributes.
+  class Entry
+    # Initializes a new instance of SFTP::Entry.
     #
-    # @param [ SFTP::Session ] session The underlying SFTP session.
+    # @param [ String ]     name The name of the dir entry.
+    # @param [ SFTP::Stat ] stat The stat object.
     #
     # @return [ Void ]
-    def initialize(session)
-      @session = session
+    def initialize(name, stat)
+      @name  = name
+      @stats = stat
     end
 
-    # Calls the block once for each entry in the named directory on the remote
-    # server. Yields the file name to the block.
+    # The name of the dir entry.
     #
-    # @param [ String ] path The path of the remote directory.
-    # @param [ Proc ]   proc The block to yield.
-    #
-    # @return [ Void ]
-    def foreach(path)
-      return to_enum(:each, path) unless block_given?
+    # @return [ String ]
+    attr_reader :name
 
-      io = Handle.new(@session, path)
-      io.open_dir || loop { break unless (item = io.gets) && yield(item) }
-    ensure
-      io.close if io
+    # The stats of the dir entry.
+    #
+    # @return [ SFTP::Stat ]
+    attr_reader :stats
+
+    # Returns true if these entry appear to describe a file.
+    #
+    # @return [ Boolean ]
+    def file?
+      @stats.file?
     end
 
-    # To be enumerable
-    alias each foreach
+    # Returns true if these entry appear to describe a directory.
+    #
+    # @return [ Boolean ]
+    def directory?
+      @stats.directory?
+    end
 
-    # Returns an array of names representing the items in the given remote dir.
+    # To look like a simple string.
     #
-    # @param [ String ] path The path of the remote directory.
-    #
-    # @return [ Array<String> ]
-    def entries(path)
-      items = []
-      foreach(path) { |item| items << item } || items
+    # @return [ String ]
+    def to_s
+      name.to_s
     end
   end
 end

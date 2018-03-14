@@ -40,9 +40,11 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
     assert_raise(RuntimeError) { sftp.dir.foreach('i/am/bad') {} }
     assert_raise(RuntimeError) { sftp.dir.foreach('readme.txt') {} }
 
-    sftp.dir.foreach('/') do |name|
+    sftp.dir.foreach('/') do |entry|
       called = true
-      assert_kind_of String, name
+      assert_kind_of SFTP::Entry, entry
+      assert_kind_of String, entry.name
+      assert_kind_of SFTP::Stat, entry.stats
     end
 
     assert_true called
@@ -53,6 +55,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
     assert_raise(RuntimeError) { sftp.dir.entries 'i am bad' }
     assert_raise(RuntimeError) { sftp.dir.entries 'i/am/bad' }
     assert_raise(RuntimeError) { sftp.dir.entries 'readme.txt' }
-    assert_equal %w[. .. aspnet_client pub readme.txt], sftp.dir.entries('/')
+    assert_equal 5, sftp.dir.entries('/').size
+    assert_include sftp.dir.entries('/').map! { |e| e.name }, 'readme.txt'
   end
 end

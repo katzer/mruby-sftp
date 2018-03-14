@@ -24,15 +24,52 @@
 #include "stat.h"
 
 #include "mruby.h"
+#include "mruby/variable.h"
 
 #include <libssh2_sftp.h>
 
-static mrb_sym SYM_MOD;
+static mrb_sym SYM_ATIME;
+static mrb_sym SYM_MTIME;
+static mrb_sym SYM_SIZE;
+static mrb_sym SYM_MODE;
+static mrb_sym SYM_UID;
+static mrb_sym SYM_GID;
+
+mrb_value
+mrb_sftp_stat_obj (mrb_state *mrb, LIBSSH2_SFTP_ATTRIBUTES attrs)
+{
+    struct RClass *ftp, *cls;
+    mrb_value obj;
+
+    ftp = mrb_module_get(mrb, "SFTP");
+    cls = mrb_class_get_under(mrb, ftp, "Stat");
+    obj = mrb_obj_new(mrb, cls, 0, NULL);
+
+    if (attrs.flags & LIBSSH2_SFTP_ATTR_ACMODTIME) {
+        mrb_iv_set(mrb, obj, SYM_ATIME, mrb_fixnum_value(attrs.atime));
+        mrb_iv_set(mrb, obj, SYM_MTIME, mrb_fixnum_value(attrs.mtime));
+    }
+
+    if (attrs.flags & LIBSSH2_SFTP_ATTR_SIZE) {
+        mrb_iv_set(mrb, obj, SYM_SIZE, mrb_fixnum_value(attrs.filesize));
+    }
+
+    if (attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS) {
+        mrb_iv_set(mrb, obj, SYM_MODE, mrb_fixnum_value(attrs.permissions));
+    }
+
+    if (attrs.flags & LIBSSH2_SFTP_ATTR_UIDGID) {
+        mrb_iv_set(mrb, obj, SYM_UID, mrb_fixnum_value(attrs.uid));
+        mrb_iv_set(mrb, obj, SYM_GID, mrb_fixnum_value(attrs.gid));
+    }
+
+    return obj;
+}
 
 static mrb_value
 mrb_sftp_f_type (mrb_state *mrb, mrb_value self)
 {
-    mrb_value mode = mrb_attr_get(mrb, self, SYM_MOD);
+    mrb_value mode = mrb_attr_get(mrb, self, SYM_MODE);
     unsigned int m = mrb_fixnum(mode);
 
     if (mrb_nil_p(mode) || m == 0)
@@ -72,7 +109,12 @@ mrb_mruby_sftp_stat_init (mrb_state *mrb)
 
     mrb_define_method(mrb, cls, "type", mrb_sftp_f_type, MRB_ARGS_NONE());
 
-    SYM_MOD = mrb_intern_static(mrb, "@mode", 5);
+    SYM_ATIME = mrb_intern_static(mrb, "@atime", 6);
+    SYM_MTIME = mrb_intern_static(mrb, "@mtime", 6);
+    SYM_SIZE  = mrb_intern_static(mrb, "@size", 5);
+    SYM_MODE  = mrb_intern_static(mrb, "@mode", 5);
+    SYM_UID   = mrb_intern_static(mrb, "@uid", 4);
+    SYM_GID   = mrb_intern_static(mrb, "@gid", 4);
 
     mrb_define_const(mrb, cls, "T_REGULAR", mrb_fixnum_value(LIBSSH2_SFTP_TYPE_REGULAR));
     mrb_define_const(mrb, cls, "T_DIRECTORY", mrb_fixnum_value(LIBSSH2_SFTP_TYPE_DIRECTORY));

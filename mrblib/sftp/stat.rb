@@ -24,7 +24,7 @@ module SFTP
   # A class representing the attributes of a file or directory on the server.
   # It may be used to specify new attributes, or to query existing attributes.
   class Stat
-    # Initializes a new instance of SFTP::Attributes.
+    # Initializes a new instance of SFTP::Stat.
     #
     # @param [ Hash<Symbol, Object> ] attrs Optional attributes to set.
     #

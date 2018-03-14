@@ -26,7 +26,6 @@ extern "C" {
 #endif
 
 #include "mruby.h"
-
 #include <libssh2_sftp.h>
 
 struct mrb_sftp_handle
@@ -38,6 +37,7 @@ struct mrb_sftp_handle
 typedef struct mrb_sftp_handle mrb_sftp_handle_t;
 
 void mrb_mruby_sftp_handle_init (mrb_state *mrb);
+
 LIBSSH2_SFTP_HANDLE *mrb_sftp_handle (mrb_state *mrb, mrb_value self);
 
 #ifdef __cplusplus

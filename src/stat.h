@@ -26,8 +26,11 @@ extern "C" {
 #endif
 
 #include "mruby.h"
+#include <libssh2_sftp.h>
 
 void mrb_mruby_sftp_stat_init (mrb_state *mrb);
+
+mrb_value mrb_sftp_stat_obj (mrb_state *mrb, LIBSSH2_SFTP_ATTRIBUTES attrs);
 
 #ifdef __cplusplus
 }

@@ -23,6 +23,7 @@
 
 #include "session.h"
 #include "handle.h"
+#include "stat.h"
 
 #include "mruby.h"
 #include "mruby/data.h"
@@ -30,17 +31,9 @@
 #include "mruby/string.h"
 #include "mruby/ext/ssh.h"
 #include "mruby/ext/sftp.h"
-#include "mruby/variable.h"
 
 #include <stdlib.h>
 #include <libssh2_sftp.h>
-
-static mrb_sym SYM_ATIME;
-static mrb_sym SYM_MTIME;
-static mrb_sym SYM_SIZE;
-static mrb_sym SYM_MODE;
-static mrb_sym SYM_UID;
-static mrb_sym SYM_GID;
 
 static void
 mrb_sftp_session_free (mrb_state *mrb, void *p)
@@ -101,37 +94,6 @@ mrb_sftp_stat (mrb_state *mrb, mrb_value self, LIBSSH2_SFTP_ATTRIBUTES *attrs, i
     while ((ret = libssh2_sftp_fstat(handle, attrs)) == LIBSSH2_ERROR_EAGAIN);
 
     return ret;
-}
-
-static mrb_value
-mrb_sftp_stat_obj (mrb_state *mrb, LIBSSH2_SFTP_ATTRIBUTES attrs)
-{
-    struct RClass *ftp, *cls;
-    mrb_value obj;
-
-    ftp = mrb_module_get(mrb, "SFTP");
-    cls = mrb_class_get_under(mrb, ftp, "Stat");
-    obj = mrb_obj_new(mrb, cls, 0, NULL);
-
-    if (attrs.flags & LIBSSH2_SFTP_ATTR_ACMODTIME) {
-        mrb_iv_set(mrb, obj, SYM_ATIME, mrb_fixnum_value(attrs.atime));
-        mrb_iv_set(mrb, obj, SYM_MTIME, mrb_fixnum_value(attrs.mtime));
-    }
-
-    if (attrs.flags & LIBSSH2_SFTP_ATTR_SIZE) {
-        mrb_iv_set(mrb, obj, SYM_SIZE, mrb_fixnum_value(attrs.filesize));
-    }
-
-    if (attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS) {
-        mrb_iv_set(mrb, obj, SYM_MODE, mrb_fixnum_value(attrs.permissions));
-    }
-
-    if (attrs.flags & LIBSSH2_SFTP_ATTR_UIDGID) {
-        mrb_iv_set(mrb, obj, SYM_UID, mrb_fixnum_value(attrs.uid));
-        mrb_iv_set(mrb, obj, SYM_GID, mrb_fixnum_value(attrs.gid));
-    }
-
-    return obj;
 }
 
 static mrb_value
@@ -279,13 +241,6 @@ mrb_mruby_sftp_session_init (mrb_state *mrb)
     cls = mrb_define_class_under(mrb, ftp, "Session", mrb->object_class);
 
     MRB_SET_INSTANCE_TT(cls, MRB_TT_DATA);
-
-    SYM_ATIME = mrb_intern_static(mrb, "@atime", 6);
-    SYM_MTIME = mrb_intern_static(mrb, "@mtime", 6);
-    SYM_SIZE  = mrb_intern_static(mrb, "@size", 5);
-    SYM_MODE  = mrb_intern_static(mrb, "@mode", 5);
-    SYM_UID   = mrb_intern_static(mrb, "@uid", 4);
-    SYM_GID   = mrb_intern_static(mrb, "@gid", 4);
 
     mrb_define_method(mrb, cls, "connect",  mrb_sftp_f_connect, MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "exist?",   mrb_sftp_f_exist,   MRB_ARGS_REQ(1));

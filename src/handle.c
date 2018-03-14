@@ -21,6 +21,7 @@
  * SOFTWARE.
  */
 
+#include "stat.h"
 #include "handle.h"
 
 #include "mruby.h"
@@ -143,18 +144,24 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
 static mrb_value
 mrb_sftp_readdir (mrb_state *mrb, mrb_value self)
 {
+    struct RClass *cls = mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "Entry");
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
+    LIBSSH2_SFTP_ATTRIBUTES attrs;
     int mem_size = 256;
     char mem[mem_size];
+    mrb_value args[2];
     int rc;
 
-    rc = libssh2_sftp_readdir(handle, mem, mem_size, NULL);
+    rc = libssh2_sftp_readdir(handle, mem, mem_size, &attrs);
 
     if (rc <= 0) {
         return mrb_nil_value();
     }
 
-    return mrb_str_new(mrb, mem, rc);
+    args[0] = mrb_str_new(mrb, mem, rc);
+    args[1] = mrb_sftp_stat_obj(mrb, attrs);
+
+    return mrb_obj_new(mrb, cls, 2, args);
 }
 
 static mrb_value
