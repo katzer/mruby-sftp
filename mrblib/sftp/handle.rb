@@ -125,7 +125,7 @@ module SFTP
     # @return [ Array<String> ]
     def readlines(sep = "\n", opts = nil)
       lines = []
-      lines << gets(sep, opts) until eof?
+      loop { break unless (line = gets(sep, opts)) && lines << line }
       lines
     end
   end

@@ -47,9 +47,7 @@ module SFTP
       return to_enum(:each, path) unless block_given?
 
       io = Handle.new(@session, path)
-      io.open_dir
-
-      loop { break unless (line = io.gets) && yield(line) }
+      io.open_dir || loop { break unless (line = io.gets) && yield(line) }
     ensure
       io.close if io
     end

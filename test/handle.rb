@@ -185,15 +185,18 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |ftp|
 
     file.rewind
     lines = file.readlines
+
     assert_kind_of Array, lines
     assert_equal "\n", lines[0][-1]
-    assert_equal 11, lines.size
+    assert_equal 10, lines.size
+    assert_kind_of String, lines.last
 
     file.rewind
     lines = file.readlines(chomp: true)
     assert_kind_of Array, lines
     assert_not_equal "\n", lines[0][-1]
-    assert_equal 11, lines.size
+    assert_equal 10, lines.size
+    assert_kind_of String, lines.last
   end
 
   assert 'SFTP::Handle#close' do

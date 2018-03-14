@@ -44,10 +44,7 @@ module SFTP
     # @return [ Void ]
     def each(opts = { chomp: false })
       return to_enum(:each, opts) unless block_given?
-
-      open
-
-      loop { break unless (line = gets(opts)) && yield(line) }
+      open || loop { break unless (line = gets(opts)) && yield(line) }
     ensure
       close
     end
