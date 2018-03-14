@@ -163,7 +163,7 @@ mrb_sftp_readfile (mrb_state *mrb, mrb_value self)
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
     mrb_value arg, opts, res, buf = mrb_attr_get(mrb, self, SYM_BUF);
     mrb_bool arg_given = FALSE, mem_size_given = FALSE;
-    int rc, pos, max_mem_size = 30000, chomp = FALSE;
+    int rc, pos, max_mem_size = 32000, chomp = FALSE;
     int mem_size = 256, sep_len = 0;
     const char *sep = NULL;
     char *mem;
