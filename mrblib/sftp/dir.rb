@@ -43,8 +43,8 @@ module SFTP
     # @param [ Proc ]   proc The block to yield.
     #
     # @return [ Void ]
-    def foreach(path, &block)
-      return to_enum(:each, path) unless block
+    def foreach(path)
+      return to_enum(:each, path) unless block_given?
 
       io = Handle.new(@session, path)
       io.open_dir

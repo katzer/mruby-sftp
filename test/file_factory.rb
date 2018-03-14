@@ -31,12 +31,33 @@ assert 'SFTP::FileFactory#initialize' do
   assert_nothing_raised { SFTP::FileFactory.new(dummy) }
 end
 
-assert 'SFTP::FileFactory#directory?' do
-  SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
+SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
+  assert 'SFTP::FileFactory#directory?' do
     assert_raise(RuntimeError) { dummy.file.directory? '/pub' }
     assert_raise(ArgumentError) { sftp.file.directory? }
     assert_true  sftp.file.directory? '/pub'
     assert_false sftp.file.directory? 'readme.txt'
     assert_false sftp.file.directory? 'I am wrong'
+  end
+
+  assert 'SFTP::FileFactory#open' do
+    assert_raise(RuntimeError) { dummy.file.open 'readme.txt' }
+    assert_raise(ArgumentError) { sftp.file.open }
+
+    io = sftp.file.open('readme.txt')
+
+    assert_kind_of SFTP::File, io
+    assert_true io.open?
+
+    invoked = false
+
+    sftp.file.open('readme.txt') do |file|
+      invoked = true
+      io      = file
+      assert_kind_of SFTP::File, file
+    end
+
+    assert_true invoked
+    assert_true io.closed?
   end
 end

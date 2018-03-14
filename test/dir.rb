@@ -36,9 +36,9 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
     called = false
 
     assert_raise(ArgumentError) { sftp.dir.foreach }
-    assert_raise(RuntimeError) { sftp.dir.foreach('i am bad'){} }
-    assert_raise(RuntimeError) { sftp.dir.foreach('i/am/bad'){} }
-    assert_raise(RuntimeError) { sftp.dir.foreach('readme.txt'){} }
+    assert_raise(RuntimeError) { sftp.dir.foreach('i am bad') {} }
+    assert_raise(RuntimeError) { sftp.dir.foreach('i/am/bad') {} }
+    assert_raise(RuntimeError) { sftp.dir.foreach('readme.txt') {} }
 
     sftp.dir.foreach('/') do |name|
       called = true

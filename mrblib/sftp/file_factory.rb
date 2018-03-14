@@ -33,6 +33,27 @@ module SFTP
       @session = session
     end
 
+    # Opens a file on the remote server.
+    #
+    # @param [ String ] path  The path to the remote file.
+    # @param [ String ] flags Determines how to open the file.
+    # @param [ Int ]    mode  The mode in case of the file has to be created.
+    #
+    # @return [ Void ]
+    def open(path, flags = 'r', mode = 0)
+      io = SFTP::File.new(@session, path)
+
+      io.open(flags, mode)
+
+      return io unless block_given?
+
+      begin
+        yield(io)
+      ensure
+        io.close
+      end
+    end
+
     # Returns true if the argument refers to a directory on the remote host.
     #
     # @param [ String ] path The path to the remote file.

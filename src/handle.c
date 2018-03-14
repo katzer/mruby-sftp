@@ -246,7 +246,11 @@ mrb_sftp_readfile (mrb_state *mrb, mrb_value self)
 
   chomp:
 
-    if (chomp) {
+    if (mrb_string_p(res) && RSTRING_LEN(res) == 0) {
+        return mrb_nil_value();
+    }
+
+    if (chomp && mrb_string_p(res)) {
         res = mrb_funcall(mrb, res, "chomp", 0);
     }
 

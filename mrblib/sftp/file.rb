@@ -39,13 +39,15 @@ module SFTP
     # Yields the line to the block.
     #
     # @param [ Hash ] opts The path of the remote directory.
-    # @param [ Proc ] proc Optional config settings { chomp: true }
+    # @param [ Proc ] proc Optional config settings { chomp: false }
     #
     # @return [ Void ]
-    def each(opts = { chomp: true }, &block)
-      return to_enum(:each, opts) unless block
+    def each(opts = { chomp: false })
+      return to_enum(:each, opts) unless block_given?
+
       open
-      yield(gets(opts)) until eof?
+
+      loop { break unless (line = gets(opts)) && yield(line) }
     ensure
       close
     end

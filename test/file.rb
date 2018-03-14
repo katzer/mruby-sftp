@@ -33,9 +33,17 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
     io.each do |line|
       called += 1
       assert_kind_of String, line
+      assert_equal "\n", line[-1]
+    end
+
+    assert_equal 10, called
+
+    io.each(chomp: true) do |line|
+      called += 1
+      assert_kind_of String, line
       assert_not_equal "\n", line[-1]
     end
 
-    assert_equal 11, called
+    assert_equal 20, called
   end
 end
