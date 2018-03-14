@@ -28,12 +28,22 @@
 #include "mruby/hash.h"
 #include "mruby/class.h"
 #include "mruby/string.h"
+#include "mruby/version.h"
 #include "mruby/variable.h"
 #include "mruby/ext/sftp.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <libssh2_sftp.h>
+
+#if MRUBY_RELEASE_NO < 10400
+static mrb_int
+mrb_str_index(mrb_state *mrb, mrb_value str, const char *lit, mrb_int len, mrb_int off)
+{
+    mrb_value pos = mrb_funcall(mrb, str, "index", 2, mrb_str_new_static(mrb, lit, len), mrb_fixnum_value(off));
+    return mrb_nil_p(pos) ? -1 : mrb_fixnum(pos);
+}
+#endif
 
 static mrb_sym SYM_EOF;
 static mrb_sym SYM_BUF;
