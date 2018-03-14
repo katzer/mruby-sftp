@@ -71,13 +71,16 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |ftp|
     assert_equal 1,   file.seek(1)
   end
 
-  assert 'SFTP::Handle#tell' do
-    assert_raise(RuntimeError) { dummy.tell }
+  assert 'SFTP::Handle#pos' do
+    assert_raise(RuntimeError) { dummy.pos }
 
     file.open_file
-    file.seek(1)
 
-    assert_equal 1, file.tell
+    file.seek(1)
+    assert_equal 1, file.pos
+
+    file.pos = 2
+    assert_equal 2, file.pos
   end
 
   assert 'SFTP::Handle#rewind' do
@@ -87,6 +90,110 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |ftp|
     file.seek(1)
 
     assert_equal 0, file.rewind
+  end
+
+  assert 'SFTP::Handle#read' do
+    assert_raise(RuntimeError) { dummy.read }
+    assert_raise(TypeError) { dummy.read("\n") }
+    assert_raise(TypeError) { file.read(1.5) }
+
+    file.open_file
+    file.rewind
+
+    assert_equal 10, file.read(10).size
+    assert_equal 10, file.pos
+
+    assert_not_equal file.read(5), file.read(5)
+
+    assert_kind_of String, file.read
+    assert_nil file.read
+    assert_true file.eof?
+  end
+
+  assert 'SFTP::Handle#readline' do
+    assert_raise(RuntimeError) { dummy.readline }
+    assert_raise(TypeError) { dummy.readline(1) }
+    assert_raise(TypeError) { dummy.readline(nil) }
+
+    file.open_file
+    file.rewind
+
+    assert_equal     "\n", file.readline[-1]
+    assert_equal     "\n", file.readline(chomp: false)[-1]
+    assert_not_equal "\n", file.readline(chomp: true)[-1]
+
+    file.read
+    assert_true file.eof?
+    assert_raise(RuntimeError) { file.readline }
+  end
+
+  assert 'SFTP::Handle#gets' do
+    assert_raise(RuntimeError) { dummy.gets }
+
+    file.open_file
+    file.rewind
+
+    assert_raise(TypeError) { file.gets(1.5) }
+
+    assert_equal 10, file.gets(10).size
+    assert_equal 10, file.pos
+
+    assert_equal     "\n", file.gets[-1]
+    assert_equal     "\n", file.gets(chomp: false)[-1]
+    assert_not_equal "\n", file.gets(chomp: true)[-1]
+
+    assert_not_equal file.gets(5), file.gets(5)
+
+    assert_kind_of String, file.gets
+    assert_false file.eof?
+
+    file.gets(nil)
+    assert_true file.eof?
+    assert_nil file.gets
+  end
+
+  assert 'SFTP::Handle#getc' do
+    assert_raise(RuntimeError) { dummy.getc }
+    assert_raise(ArgumentError) { dummy.getc(2) }
+
+    file.open_file
+    file.rewind
+
+    assert_equal 1, file.getc.size
+  end
+
+  assert 'SFTP::Handle#eof?' do
+    assert_raise(RuntimeError) { dummy.eof? }
+
+    file.open_file
+
+    file.rewind
+    assert_false file.eof?
+
+    file.read
+    assert_true file.eof?
+
+    file.pos = 1
+    assert_false file.eof?
+  end
+
+  assert 'SFTP::Handle#readlines' do
+    assert_raise(RuntimeError) { dummy.readlines }
+    assert_raise(TypeError) { file.readlines(1.5) }
+
+    file.open_file
+
+    file.rewind
+    lines = file.readlines
+    assert_kind_of Array, lines
+    assert_equal "\n", lines[0][-1]
+    assert_equal 11, lines.size
+
+    file.rewind
+    lines = file.readlines(chomp: true)
+    assert_kind_of Array, lines
+    assert_not_equal "\n", lines[0][-1]
+    assert_equal 11, lines.size
   end
 
   assert 'SFTP::Handle#close' do
