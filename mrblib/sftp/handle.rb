@@ -61,6 +61,13 @@ module SFTP
       !closed?
     end
 
+    # Performs an fstat operation on the handle and returns the stats.
+    #
+    # @return [ SFTP::Stat ]
+    def stat
+      @session.fstat(self)
+    end
+
     # Repositions the file pointer to the given offset (relative to the start of
     # the file). This will also reset the EOF flag.
     #

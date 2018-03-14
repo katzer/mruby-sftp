@@ -35,6 +35,9 @@ mrb_sftp_f_type (mrb_state *mrb, mrb_value self)
     mrb_value mode = mrb_attr_get(mrb, self, SYM_MOD);
     unsigned int m = mrb_fixnum(mode);
 
+    if (mrb_nil_p(mode) || m == 0)
+        mrb_fixnum_value(LIBSSH2_SFTP_TYPE_UNKNOWN);
+
     if (LIBSSH2_SFTP_S_ISLNK(m))
         return mrb_fixnum_value(LIBSSH2_SFTP_TYPE_SYMLINK);
 

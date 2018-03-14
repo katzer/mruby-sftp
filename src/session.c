@@ -213,6 +213,15 @@ mrb_sftp_f_lstat (mrb_state *mrb, mrb_value self)
 }
 
 static mrb_value
+mrb_sftp_f_fstat (mrb_state *mrb, mrb_value self)
+{
+    LIBSSH2_SFTP_ATTRIBUTES attrs;
+    mrb_sftp_stat(mrb, self, &attrs, LIBSSH2_SFTP_LSTAT);
+
+    return mrb_sftp_stat_obj(mrb, attrs);
+}
+
+static mrb_value
 mrb_sftp_f_close (mrb_state *mrb, mrb_value self)
 {
     mrb_sftp_session_free(mrb, DATA_PTR(self));
@@ -269,6 +278,7 @@ mrb_mruby_sftp_session_init (mrb_state *mrb)
     mrb_define_method(mrb, cls, "realpath", mrb_sftp_f_rpath,   MRB_ARGS_REQ(1));
     mrb_define_method(mrb, cls, "stat",     mrb_sftp_f_stat,    MRB_ARGS_REQ(1));
     mrb_define_method(mrb, cls, "lstat",    mrb_sftp_f_lstat,   MRB_ARGS_REQ(1));
+    mrb_define_method(mrb, cls, "fstat",    mrb_sftp_f_fstat,   MRB_ARGS_REQ(1));
     mrb_define_method(mrb, cls, "close",    mrb_sftp_f_close,   MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "closed?",  mrb_sftp_f_closed,  MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "last_errno", mrb_sftp_f_last_errno, MRB_ARGS_NONE());
