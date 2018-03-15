@@ -59,6 +59,6 @@ Made with :yum: from Leipzig
 © 2017 [appPlant GmbH][appplant]
 
 [mruby]: https://github.com/mruby/mruby
-[net_ssh]: https://github.com/net-ssh/net-sftp
+[net_sftp]: https://github.com/net-ssh/net-sftp
 [license]: http://opensource.org/licenses/MIT
 [appplant]: www.appplant.de
