@@ -32,6 +32,11 @@ module SFTP
       connect if session.logged_in?
     end
 
+    # A reference to the SSH session object that powers this SFTP session.
+    #
+    # @return [ SSH::Session ]
+    attr_reader :session
+
     # If the socket is connected to the host.
     #
     # @return [ Boolean ]
