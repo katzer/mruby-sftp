@@ -251,6 +251,23 @@ mrb_sftp_f_rmdir (mrb_state *mrb, mrb_value self)
 }
 
 static mrb_value
+mrb_sftp_f_mkdir (mrb_state *mrb, mrb_value self)
+{
+    const char *path;
+    mrb_int path_len, mode = 0000733;
+    int ret;
+
+    LIBSSH2_SFTP *sftp = mrb_sftp_session(self);
+    mrb_sftp_raise_unless_connected(mrb, sftp);
+
+    mrb_get_args(mrb, "s|i", &path, &path_len, &mode);
+
+    while ((ret = libssh2_sftp_mkdir_ex(sftp, path, path_len, mode)) == LIBSSH2_ERROR_EAGAIN);
+
+    return mrb_bool_value(ret == 0 ? TRUE : FALSE);
+}
+
+static mrb_value
 mrb_sftp_f_close (mrb_state *mrb, mrb_value self)
 {
     mrb_sftp_session_free(mrb, DATA_PTR(self));
@@ -308,6 +325,7 @@ mrb_mruby_sftp_session_init (mrb_state *mrb)
     mrb_define_method(mrb, cls, "rename",   mrb_sftp_f_rename,  MRB_ARGS_ARG(2,1));
     mrb_define_method(mrb, cls, "symlink",  mrb_sftp_f_symlink, MRB_ARGS_REQ(2));
     mrb_define_method(mrb, cls, "rmdir",    mrb_sftp_f_rmdir,   MRB_ARGS_REQ(1));
+    mrb_define_method(mrb, cls, "mkdir",    mrb_sftp_f_mkdir,   MRB_ARGS_ARG(1,1));
     mrb_define_method(mrb, cls, "close",    mrb_sftp_f_close,   MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "closed?",  mrb_sftp_f_closed,  MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "last_errno", mrb_sftp_f_last_errno, MRB_ARGS_NONE());
