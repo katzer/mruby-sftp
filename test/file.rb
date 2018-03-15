@@ -46,4 +46,14 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
 
     assert_equal 20, called
   end
+
+  assert 'SFTP::File#sync' do
+    io.close
+    assert_raise(RuntimeError) { io.sync }
+
+    io.open
+    assert_false io.sync
+    assert_equal SFTP::UNSUPPORTED, sftp.last_errno
+    io.close
+  end
 end

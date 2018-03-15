@@ -389,6 +389,24 @@ mrb_sftp_f_eof (mrb_state *mrb, mrb_value self)
 }
 
 static mrb_value
+mrb_sftp_f_sync (mrb_state *mrb, mrb_value self)
+{
+    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
+    int ret;
+
+    mrb_sftp_raise_unless_opened(mrb, handle);
+
+    while ((ret = libssh2_sftp_fsync(handle)) == LIBSSH2_ERROR_EAGAIN);
+
+    if (ret == 0) {
+        mrb_iv_remove(mrb, self, SYM_EOF);
+        mrb_iv_remove(mrb, self, SYM_BUF);
+    }
+
+    return mrb_bool_value(ret == 0 ? TRUE : FALSE);
+}
+
+static mrb_value
 mrb_sftp_f_close (mrb_state *mrb, mrb_value self)
 {
     mrb_sftp_handle_free(mrb, DATA_PTR(self));
@@ -438,6 +456,7 @@ mrb_mruby_sftp_handle_init (mrb_state *mrb)
     mrb_define_method(mrb, cls, "seek",     mrb_sftp_f_seek,   MRB_ARGS_ARG(1,1));
     mrb_define_method(mrb, cls, "gets",     mrb_sftp_f_gets,   MRB_ARGS_OPT(1));
     mrb_define_method(mrb, cls, "eof?",     mrb_sftp_f_eof,    MRB_ARGS_NONE());
+    mrb_define_method(mrb, cls, "sync",     mrb_sftp_f_sync,   MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "close",    mrb_sftp_f_close,  MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "closed?",  mrb_sftp_f_closed, MRB_ARGS_NONE());
 }
