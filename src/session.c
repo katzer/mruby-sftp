@@ -203,15 +203,16 @@ mrb_sftp_f_rename (mrb_state *mrb, mrb_value self)
     const char *source, *dest;
     mrb_int source_len, dest_len;
     mrb_int flags = LIBSSH2_SFTP_RENAME_OVERWRITE | LIBSSH2_SFTP_RENAME_ATOMIC | LIBSSH2_SFTP_RENAME_NATIVE;
+    int ret;
 
     LIBSSH2_SFTP *sftp = mrb_sftp_session(self);
     mrb_sftp_raise_unless_connected(mrb, sftp);
 
     mrb_get_args(mrb, "ss|i", &source, &source_len, &dest, &dest_len, &flags);
 
-    libssh2_sftp_rename_ex(sftp, source, source_len, dest, dest_len, flags);
+    while ((ret = libssh2_sftp_rename_ex(sftp, source, source_len, dest, dest_len, flags)) == LIBSSH2_ERROR_EAGAIN);
 
-    return mrb_nil_value();
+    return mrb_bool_value(ret < 0 ? FALSE : TRUE);
 }
 
 static mrb_value
