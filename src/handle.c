@@ -151,12 +151,11 @@ mrb_sftp_readdir (mrb_state *mrb, mrb_value self)
     struct RClass *cls = mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "Entry");
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
     LIBSSH2_SFTP_ATTRIBUTES attrs;
-    int mem_size = 256;
-    char mem[mem_size];
+    char mem[256];
     mrb_value args[2];
     int rc;
 
-    while ((rc = libssh2_sftp_readdir(handle, mem, mem_size, &attrs)) == LIBSSH2_ERROR_EAGAIN);
+    while ((rc = libssh2_sftp_readdir(handle, mem, 256, &attrs)) == LIBSSH2_ERROR_EAGAIN);
 
     if (rc <= 0) {
         return mrb_nil_value();
