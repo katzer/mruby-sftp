@@ -34,9 +34,13 @@ mrb_mruby_sftp_gem_init (mrb_state *mrb)
 {
     struct RClass *ftp = mrb_define_module(mrb, "SFTP");
 
+    mrb_define_const(mrb, ftp, "RENAME_OVERWRITE", mrb_fixnum_value(LIBSSH2_SFTP_RENAME_OVERWRITE));
+    mrb_define_const(mrb, ftp, "RENAME_ATOMIC",    mrb_fixnum_value(LIBSSH2_SFTP_RENAME_ATOMIC));
+    mrb_define_const(mrb, ftp, "RENAME_NATIVE",    mrb_fixnum_value(LIBSSH2_SFTP_RENAME_NATIVE));
+
     mrb_define_const(mrb, ftp, "NO_SUCH_FILE",   mrb_fixnum_value(LIBSSH2_FX_NO_SUCH_FILE));
     mrb_define_const(mrb, ftp, "NO_SUCH_PATH",   mrb_fixnum_value(LIBSSH2_FX_NO_SUCH_PATH));
-    mrb_define_const(mrb, ftp, "PERMISSION",     mrb_fixnum_value(LIBSSH2_FX_PERMISSION_DENIED));
+    mrb_define_const(mrb, ftp, "PERMISSION_DENIED", mrb_fixnum_value(LIBSSH2_FX_PERMISSION_DENIED));
     mrb_define_const(mrb, ftp, "FILE_EXIST",     mrb_fixnum_value(LIBSSH2_FX_FILE_ALREADY_EXISTS));
     mrb_define_const(mrb, ftp, "WRITE_PROTECT",  mrb_fixnum_value(LIBSSH2_FX_WRITE_PROTECT));
     mrb_define_const(mrb, ftp, "WRITE_PROTECT",  mrb_fixnum_value(LIBSSH2_FX_WRITE_PROTECT));

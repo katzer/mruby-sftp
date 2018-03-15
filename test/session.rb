@@ -35,6 +35,10 @@ end
 
 dummy = SFTP::Session.new(SSH::Session.new)
 
+assert 'SFTP::Session#session' do
+  assert_kind_of SSH::Session, dummy.session
+end
+
 assert 'SFTP::Session#file' do
   assert_kind_of SFTP::FileFactory, dummy.file
 end
@@ -129,6 +133,53 @@ SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
   assert 'SFTP::Session#last_errno' do
     sftp.exist? 'I/am/wrong'
     assert_equal SFTP::NO_SUCH_FILE, sftp.last_errno
+  end
+
+  assert 'SFTP::Session#setstat', 'readonly server :(' do
+    assert_raise(RuntimeError) { dummy.setstat('readme.txt', uid: 1) }
+    assert_raise(ArgumentError) { sftp.setstat }
+    assert_raise(ArgumentError) { sftp.setstat 'readme.txt' }
+    assert_false sftp.setstat('readme.txt', uid: 1)
+    assert_equal SFTP::PERMISSION_DENIED, sftp.last_errno
+  end
+
+  assert 'SFTP::Session#delete', 'readonly server :(' do
+    assert_raise(RuntimeError) { dummy.delete('readme.txt') }
+    assert_raise(ArgumentError) { sftp.delete }
+    assert_false sftp.delete('readme.txt')
+    assert_equal SFTP::PERMISSION_DENIED, sftp.last_errno
+  end
+
+  assert 'SFTP::Session#mkdir', 'readonly server :(' do
+    assert_raise(RuntimeError) { dummy.mkdir('/dir') }
+    assert_raise(ArgumentError) { sftp.mkdir }
+    assert_false sftp.mkdir('/dir')
+    assert_false sftp.mkdir('/dir', 755)
+    assert_equal SFTP::PERMISSION_DENIED, sftp.last_errno
+  end
+
+  assert 'SFTP::Session#rmdir', 'readonly server :(' do
+    assert_raise(RuntimeError) { dummy.rmdir('/dir') }
+    assert_raise(ArgumentError) { sftp.rmdir }
+    assert_false sftp.rmdir('/pub')
+    assert_equal SFTP::PERMISSION_DENIED, sftp.last_errno
+  end
+
+  assert 'SFTP::Session#symlink', 'readonly server :(' do
+    assert_raise(RuntimeError) { dummy.symlink('readme.txt', 'link') }
+    assert_raise(ArgumentError) { sftp.symlink }
+    assert_raise(ArgumentError) { sftp.symlink('readme.txt') }
+    assert_false sftp.symlink('/readme.txt', '/readme_link.txt')
+  end
+
+  assert 'SFTP::Session#rename', 'readonly server :(' do
+    assert_raise(RuntimeError) { dummy.rename('readme.txt', 'link') }
+    assert_raise(ArgumentError) { sftp.rename }
+    assert_raise(ArgumentError) { sftp.rename('readme.txt') }
+    assert_false sftp.rename('readme.txt', 'readme2.txt')
+    assert_equal SFTP::PERMISSION_DENIED, sftp.last_errno
+    assert_false sftp.rename('readme.txt', 'readme2.txt', SFTP::RENAME_ATOMIC)
+    assert_equal SFTP::PERMISSION_DENIED, sftp.last_errno
   end
 
   assert 'SFTP#close' do

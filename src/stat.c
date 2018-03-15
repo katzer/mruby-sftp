@@ -24,6 +24,7 @@
 #include "stat.h"
 
 #include "mruby.h"
+#include "mruby/hash.h"
 #include "mruby/variable.h"
 
 #include <libssh2_sftp.h>
@@ -64,6 +65,39 @@ mrb_sftp_stat_obj (mrb_state *mrb, LIBSSH2_SFTP_ATTRIBUTES attrs)
     }
 
     return obj;
+}
+
+void
+mrb_sftp_hash_to_stat (mrb_state *mrb, mrb_value hsh, LIBSSH2_SFTP_ATTRIBUTES *attrs)
+{
+    mrb_value atime = mrb_hash_get(mrb, hsh, mrb_symbol_value(SYM_ATIME));
+    mrb_value mtime = mrb_hash_get(mrb, hsh, mrb_symbol_value(SYM_MTIME));
+    mrb_value gid   = mrb_hash_get(mrb, hsh, mrb_symbol_value(SYM_GID));
+    mrb_value uid   = mrb_hash_get(mrb, hsh, mrb_symbol_value(SYM_UID));
+    mrb_value size  = mrb_hash_get(mrb, hsh, mrb_symbol_value(SYM_SIZE));
+    mrb_value mode  = mrb_hash_get(mrb, hsh, mrb_symbol_value(SYM_MODE));
+
+    if (mrb_test(atime) || mrb_test(mtime)) {
+        attrs->flags |= LIBSSH2_SFTP_ATTR_ACMODTIME;
+        attrs->atime = mrb_fixnum(atime);
+        attrs->mtime = mrb_fixnum(mtime);
+    }
+
+    if (mrb_test(uid) || mrb_test(gid)) {
+        attrs->flags |= LIBSSH2_SFTP_ATTR_UIDGID;
+        attrs->uid = mrb_fixnum(uid);
+        attrs->gid = mrb_fixnum(gid);
+    }
+
+    if (mrb_test(size)) {
+        attrs->flags |= LIBSSH2_SFTP_ATTR_SIZE;
+        attrs->filesize = mrb_fixnum(size);
+    }
+
+    if (mrb_test(mode)) {
+        attrs->flags |= LIBSSH2_SFTP_ATTR_PERMISSIONS;
+        attrs->permissions = mrb_fixnum(mode);
+    }
 }
 
 static mrb_value

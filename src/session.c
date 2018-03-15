@@ -205,6 +205,27 @@ mrb_sftp_f_fstat (mrb_state *mrb, mrb_value self)
 }
 
 static mrb_value
+mrb_sftp_f_setstat (mrb_state *mrb, mrb_value self)
+{
+    const char *path;
+    mrb_int path_len;
+    mrb_value opts;
+    int ret;
+
+    LIBSSH2_SFTP_ATTRIBUTES attrs;
+    LIBSSH2_SFTP *sftp = mrb_sftp_session(self);
+    mrb_sftp_raise_unless_connected(mrb, sftp);
+
+    mrb_get_args(mrb, "sH", &path, &path_len, &opts);
+
+    mrb_sftp_hash_to_stat(mrb, opts, &attrs);
+
+    while ((ret = libssh2_sftp_stat_ex(sftp, path, path_len, LIBSSH2_SFTP_SETSTAT, &attrs)) == LIBSSH2_ERROR_EAGAIN);
+
+    return mrb_bool_value(ret == 0 ? TRUE : FALSE);
+}
+
+static mrb_value
 mrb_sftp_f_rename (mrb_state *mrb, mrb_value self)
 {
     const char *source, *dest;
@@ -336,16 +357,13 @@ mrb_mruby_sftp_session_init (mrb_state *mrb)
 
     MRB_SET_INSTANCE_TT(cls, MRB_TT_DATA);
 
-    mrb_define_const(mrb, cls, "RENAME_OVERWRITE", mrb_fixnum_value(LIBSSH2_SFTP_RENAME_OVERWRITE));
-    mrb_define_const(mrb, cls, "RENAME_ATOMIC",    mrb_fixnum_value(LIBSSH2_SFTP_RENAME_ATOMIC));
-    mrb_define_const(mrb, cls, "RENAME_NATIVE",    mrb_fixnum_value(LIBSSH2_SFTP_RENAME_NATIVE));
-
     mrb_define_method(mrb, cls, "connect",  mrb_sftp_f_connect, MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "exist?",   mrb_sftp_f_exist,   MRB_ARGS_REQ(1));
     mrb_define_method(mrb, cls, "realpath", mrb_sftp_f_rpath,   MRB_ARGS_REQ(1));
     mrb_define_method(mrb, cls, "stat",     mrb_sftp_f_stat,    MRB_ARGS_REQ(1));
     mrb_define_method(mrb, cls, "lstat",    mrb_sftp_f_lstat,   MRB_ARGS_REQ(1));
     mrb_define_method(mrb, cls, "fstat",    mrb_sftp_f_fstat,   MRB_ARGS_REQ(1));
+    mrb_define_method(mrb, cls, "setstat",  mrb_sftp_f_setstat, MRB_ARGS_REQ(2));
     mrb_define_method(mrb, cls, "rename",   mrb_sftp_f_rename,  MRB_ARGS_ARG(2,1));
     mrb_define_method(mrb, cls, "symlink",  mrb_sftp_f_symlink, MRB_ARGS_REQ(2));
     mrb_define_method(mrb, cls, "rmdir",    mrb_sftp_f_rmdir,   MRB_ARGS_REQ(1));
