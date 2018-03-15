@@ -185,17 +185,17 @@ mrb_sftp_readfile (mrb_state *mrb, mrb_value self)
     }
 
     if (mrb_string_p(arg)) {
-        sep       = RSTRING_PTR(arg);
-        sep_len   = RSTRING_LEN(arg);
-    } else
-    if (mrb_fixnum_p(arg)) {
-        mem_size       = mrb_fixnum(arg);
-        mem_size_given = TRUE;
+        sep     = RSTRING_PTR(arg);
+        sep_len = RSTRING_LEN(arg);
     } else
     if (mrb_hash_p(arg)) {
         sep     = "\n";
         sep_len = 1;
         chomp   = mrb_type(mrb_hash_get(mrb, arg, KEY_CHOMP)) == MRB_TT_TRUE;
+    } else
+    if (arg_given && mrb_fixnum_p(arg)) {
+        mem_size       = mrb_fixnum(arg);
+        mem_size_given = TRUE;
     } else
     if (arg_given && mrb_nil_p(arg)) {
         mem_size  = max_mem_size;
