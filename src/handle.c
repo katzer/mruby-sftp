@@ -112,6 +112,7 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
     int len;
 
     LIBSSH2_SFTP *sftp;
+    LIBSSH2_SESSION* ssh;
     LIBSSH2_SFTP_HANDLE *handle;
     mrb_sftp_handle_t *data;
     mrb_value session;
@@ -119,6 +120,7 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
     if (DATA_PTR(self)) return;
 
     session = mrb_attr_get(mrb, self, SYM_SESSION);
+    ssh     = mrb_sftp_ssh_session(session);
     sftp    = mrb_sftp_session(session);
     path    = mrb_sftp_path(mrb, self, &len);
 
@@ -126,11 +128,13 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
         mrb_raise(mrb, E_RUNTIME_ERROR, "SFTP session not connected.");
     }
 
-    handle = libssh2_sftp_open_ex(sftp, path, len, flags, mode, type);
+    do {
+        handle = libssh2_sftp_open_ex(sftp, path, len, flags, mode, type);
 
-    if (!handle) {
-        mrb_raise(mrb, E_RUNTIME_ERROR, "The system cannot find the dir specified.");
-    }
+        if (!handle && libssh2_session_last_errno(ssh) != LIBSSH2_ERROR_EAGAIN) {
+            mrb_raise(mrb, E_RUNTIME_ERROR, "The system cannot find the dir specified.");
+        }
+    } while (!handle);
 
     data          = malloc(sizeof(mrb_sftp_handle_t));
     data->session = mrb_ptr(session);
@@ -152,7 +156,7 @@ mrb_sftp_readdir (mrb_state *mrb, mrb_value self)
     mrb_value args[2];
     int rc;
 
-    rc = libssh2_sftp_readdir(handle, mem, mem_size, &attrs);
+    while ((rc = libssh2_sftp_readdir(handle, mem, mem_size, &attrs)) == LIBSSH2_ERROR_EAGAIN);
 
     if (rc <= 0) {
         return mrb_nil_value();
@@ -223,7 +227,8 @@ mrb_sftp_readfile (mrb_state *mrb, mrb_value self)
   read:
 
     mem = malloc(mem_size * sizeof(char));
-    rc  = libssh2_sftp_read(handle, mem, mem_size);
+
+    while ((rc = libssh2_sftp_read(handle, mem, mem_size)) == LIBSSH2_ERROR_EAGAIN);
 
     if (rc <= 0) {
         free(mem);
