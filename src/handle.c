@@ -162,7 +162,7 @@ mrb_sftp_readdir (mrb_state *mrb, mrb_value self)
     }
 
     args[0] = mrb_str_new(mrb, mem, rc);
-    args[1] = mrb_sftp_stat_obj(mrb, attrs);
+    args[1] = mrb_sftp_stat_obj(mrb, &attrs);
 
     return mrb_obj_new(mrb, cls, 2, args);
 }

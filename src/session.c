@@ -181,27 +181,27 @@ static mrb_value
 mrb_sftp_f_stat (mrb_state *mrb, mrb_value self)
 {
     LIBSSH2_SFTP_ATTRIBUTES attrs;
-    mrb_sftp_stat(mrb, self, &attrs, LIBSSH2_SFTP_STAT);
+    int ret = mrb_sftp_stat(mrb, self, &attrs, LIBSSH2_SFTP_STAT);
 
-    return mrb_sftp_stat_obj(mrb, attrs);
+    return mrb_sftp_stat_obj(mrb, ret == LIBSSH2_FX_OK ? &attrs : NULL);
 }
 
 static mrb_value
 mrb_sftp_f_lstat (mrb_state *mrb, mrb_value self)
 {
     LIBSSH2_SFTP_ATTRIBUTES attrs;
-    mrb_sftp_stat(mrb, self, &attrs, LIBSSH2_SFTP_LSTAT);
+    int ret = mrb_sftp_stat(mrb, self, &attrs, LIBSSH2_SFTP_LSTAT);
 
-    return mrb_sftp_stat_obj(mrb, attrs);
+    return mrb_sftp_stat_obj(mrb, ret == LIBSSH2_FX_OK ? &attrs : NULL);
 }
 
 static mrb_value
 mrb_sftp_f_fstat (mrb_state *mrb, mrb_value self)
 {
     LIBSSH2_SFTP_ATTRIBUTES attrs;
-    mrb_sftp_stat(mrb, self, &attrs, LIBSSH2_SFTP_STAT);
+    int ret = mrb_sftp_stat(mrb, self, &attrs, LIBSSH2_SFTP_STAT);
 
-    return mrb_sftp_stat_obj(mrb, attrs);
+    return mrb_sftp_stat_obj(mrb, ret == LIBSSH2_FX_OK ? &attrs : NULL);
 }
 
 static mrb_value

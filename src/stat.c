@@ -37,7 +37,7 @@ static mrb_sym SYM_UID;
 static mrb_sym SYM_GID;
 
 mrb_value
-mrb_sftp_stat_obj (mrb_state *mrb, LIBSSH2_SFTP_ATTRIBUTES attrs)
+mrb_sftp_stat_obj (mrb_state *mrb, LIBSSH2_SFTP_ATTRIBUTES *attrs)
 {
     struct RClass *ftp, *cls;
     mrb_value obj;
@@ -46,22 +46,24 @@ mrb_sftp_stat_obj (mrb_state *mrb, LIBSSH2_SFTP_ATTRIBUTES attrs)
     cls = mrb_class_get_under(mrb, ftp, "Stat");
     obj = mrb_obj_new(mrb, cls, 0, NULL);
 
-    if (attrs.flags & LIBSSH2_SFTP_ATTR_ACMODTIME) {
-        mrb_iv_set(mrb, obj, SYM_ATIME, mrb_fixnum_value(attrs.atime));
-        mrb_iv_set(mrb, obj, SYM_MTIME, mrb_fixnum_value(attrs.mtime));
+    if (!attrs) return obj;
+
+    if (attrs->flags & LIBSSH2_SFTP_ATTR_ACMODTIME) {
+        mrb_iv_set(mrb, obj, SYM_ATIME, mrb_fixnum_value(attrs->atime));
+        mrb_iv_set(mrb, obj, SYM_MTIME, mrb_fixnum_value(attrs->mtime));
     }
 
-    if (attrs.flags & LIBSSH2_SFTP_ATTR_SIZE) {
-        mrb_iv_set(mrb, obj, SYM_SIZE, mrb_fixnum_value(attrs.filesize));
+    if (attrs->flags & LIBSSH2_SFTP_ATTR_SIZE) {
+        mrb_iv_set(mrb, obj, SYM_SIZE, mrb_fixnum_value(attrs->filesize));
     }
 
-    if (attrs.flags & LIBSSH2_SFTP_ATTR_PERMISSIONS) {
-        mrb_iv_set(mrb, obj, SYM_MODE, mrb_fixnum_value(attrs.permissions));
+    if (attrs->flags & LIBSSH2_SFTP_ATTR_PERMISSIONS) {
+        mrb_iv_set(mrb, obj, SYM_MODE, mrb_fixnum_value(attrs->permissions));
     }
 
-    if (attrs.flags & LIBSSH2_SFTP_ATTR_UIDGID) {
-        mrb_iv_set(mrb, obj, SYM_UID, mrb_fixnum_value(attrs.uid));
-        mrb_iv_set(mrb, obj, SYM_GID, mrb_fixnum_value(attrs.gid));
+    if (attrs->flags & LIBSSH2_SFTP_ATTR_UIDGID) {
+        mrb_iv_set(mrb, obj, SYM_UID, mrb_fixnum_value(attrs->uid));
+        mrb_iv_set(mrb, obj, SYM_GID, mrb_fixnum_value(attrs->gid));
     }
 
     return obj;

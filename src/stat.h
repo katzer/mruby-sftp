@@ -30,7 +30,7 @@ extern "C" {
 
 void mrb_mruby_sftp_stat_init (mrb_state *mrb);
 
-mrb_value mrb_sftp_stat_obj (mrb_state *mrb, LIBSSH2_SFTP_ATTRIBUTES attrs);
+mrb_value mrb_sftp_stat_obj (mrb_state *mrb, LIBSSH2_SFTP_ATTRIBUTES *attrs);
 void mrb_sftp_hash_to_stat (mrb_state *mrb, mrb_value hsh, LIBSSH2_SFTP_ATTRIBUTES *attrs);
 
 #ifdef __cplusplus
