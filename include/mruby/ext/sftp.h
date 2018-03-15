@@ -41,6 +41,7 @@ struct mrb_sftp
 typedef struct mrb_sftp mrb_sftp_t;
 
 LIBSSH2_SFTP* mrb_sftp_session (mrb_value self);
+LIBSSH2_SESSION* mrb_sftp_ssh_session (mrb_value self);
 
 #ifdef __cplusplus
 }

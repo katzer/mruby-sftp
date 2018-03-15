@@ -60,6 +60,13 @@ mrb_sftp_session (mrb_value self)
     return (data) ? data->sftp : NULL;
 }
 
+LIBSSH2_SESSION*
+mrb_sftp_ssh_session (mrb_value self)
+{
+    mrb_sftp_t *data = DATA_PTR(self);
+    return data && data->session->data ? ((mrb_ssh_t *)data->session->data)->session : NULL;
+}
+
 static void
 mrb_sftp_raise_unless_connected (mrb_state *mrb, LIBSSH2_SFTP *sftp)
 {
