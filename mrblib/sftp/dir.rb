@@ -24,9 +24,6 @@ module SFTP
   # A convenience class for working with remote directories. It provides methods
   # for searching and enumerating directory entries.
   class Dir
-    # To be enumerable
-    include Enumerable
-
     # Creates a new SFTP::Dir instance atop the given SFTP connection.
     #
     # @param [ SFTP::Session ] session The underlying SFTP session.
