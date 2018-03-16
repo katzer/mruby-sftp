@@ -390,6 +390,9 @@ mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
     mrb_sftp_raise_unless_opened(mrb, handle);
 
+    libssh2_sftp_rewind(handle);
+    mrb_iv_remove(mrb, self, SYM_BUF);
+
     mrb_get_args(mrb, "s", &path, &len);
 
     if (!(file = fopen(path, "wb"))) {
