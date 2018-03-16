@@ -225,9 +225,9 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
         }
     }
 
-  read:
-
     mem = malloc(mem_size * sizeof(char));
+
+  read:
 
     while ((rc = libssh2_sftp_read(handle, mem, mem_size)) == LIBSSH2_ERROR_EAGAIN);
 
@@ -245,12 +245,11 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
         buf = mrb_str_new(mrb, mem, rc);
     }
 
-    free(mem);
-
     if (!sep && !mem_size_given && rc > 0)
         goto read;
 
     if (!sep) {
+        free(mem);
         mrb_iv_remove(mrb, self, SYM_BUF);
         res = buf;
         goto chomp;
@@ -258,6 +257,8 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
 
     if ((pos = mrb_str_index(mrb, buf, sep, sep_len, 0)) == -1)
         goto read;
+
+    free(mem);
 
   hit:
 
