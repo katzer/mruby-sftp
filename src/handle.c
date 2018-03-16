@@ -175,8 +175,8 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
     mrb_value arg, opts, res, buf = mrb_attr_get(mrb, self, SYM_BUF);
     mrb_bool arg_given = FALSE, mem_size_given = FALSE;
-    int rc, pos, max_mem_size = 32000, chomp = FALSE;
-    int mem_size = 256, sep_len = 0;
+    unsigned int mem_size = 256, sep_len = 0;
+    int rc, pos, chomp = FALSE;
     const char *sep = NULL;
     char *mem;
 
@@ -200,7 +200,7 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
         mem_size_given = TRUE;
     } else
     if (arg_given && mrb_nil_p(arg)) {
-        mem_size  = max_mem_size;
+        mem_size  = 3200000;
     } else
     if (!arg_given) {
         sep     = "\n";
@@ -211,10 +211,6 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
 
     if (sep && mrb_test(buf) && ((pos = mrb_str_index(mrb, buf, sep, sep_len, 0)) != -1))
         goto hit;
-
-    if (mem_size > max_mem_size) {
-        mem_size = max_mem_size;
-    }
 
     if (mem_size_given && mrb_test(buf)) {
         if (RSTRING_LEN(buf) >= mem_size) {
@@ -383,7 +379,7 @@ mrb_sftp_f_gets (mrb_state *mrb, mrb_value self)
 static mrb_value
 mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
 {
-    size_t mem_size = 32000;
+    size_t mem_size = 3200000;
     const char* path;
     mrb_int len;
     long size = 0;
