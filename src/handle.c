@@ -416,6 +416,7 @@ mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
 
     free(mem);
     fclose(file);
+    mrb_iv_set(mrb, self, SYM_EOF, mrb_true_value());
 
     return mrb_fixnum_value(size);
 }
