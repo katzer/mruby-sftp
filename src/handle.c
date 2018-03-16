@@ -34,6 +34,7 @@
 #include "mruby/ext/sftp.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <libssh2_sftp.h>
 
@@ -379,6 +380,47 @@ mrb_sftp_f_gets (mrb_state *mrb, mrb_value self)
 }
 
 static mrb_value
+mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
+{
+    size_t mem_size = 32000;
+    const char* path;
+    mrb_int len;
+    long size = 0;
+    FILE *file;
+    char *mem;
+    int rc;
+
+    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
+    mrb_sftp_raise_unless_opened(mrb, handle);
+
+    mrb_get_args(mrb, "s", &path, &len);
+
+    if (!(file = fopen(path, "wb"))) {
+        mrb_raise(mrb, E_RUNTIME_ERROR, "Cannot open the path specified.");
+    }
+
+    mem = malloc(mem_size * sizeof(char));
+
+  read:
+
+    while ((rc = libssh2_sftp_read(handle, mem, mem_size)) == LIBSSH2_ERROR_EAGAIN);
+
+    if (rc < 0) goto done;
+
+    fwrite(mem, sizeof(char), rc, file);
+    size += rc;
+
+    if (rc > 0) goto read;
+
+  done:
+
+    free(mem);
+    fclose(file);
+
+    return mrb_fixnum_value(size);
+}
+
+static mrb_value
 mrb_sftp_f_eof (mrb_state *mrb, mrb_value self)
 {
     mrb_value eof               = mrb_attr_get(mrb, self, SYM_EOF);
@@ -450,11 +492,12 @@ mrb_mruby_sftp_handle_init (mrb_state *mrb)
     SYM_PATH    = mrb_intern_static(mrb, "@path", 5);
     SYM_SESSION = mrb_intern_static(mrb, "@session", 8);
 
-    mrb_define_method(mrb, cls, "open_dir", mrb_sftp_f_open_dir,  MRB_ARGS_NONE());
+    mrb_define_method(mrb, cls, "open_dir", mrb_sftp_f_open_dir, MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "open_file",mrb_sftp_f_open_file, MRB_ARGS_OPT(2));
     mrb_define_method(mrb, cls, "pos",      mrb_sftp_f_pos,    MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "seek",     mrb_sftp_f_seek,   MRB_ARGS_ARG(1,1));
     mrb_define_method(mrb, cls, "gets",     mrb_sftp_f_gets,   MRB_ARGS_OPT(1));
+    mrb_define_method(mrb, cls, "download", mrb_sftp_f_download, MRB_ARGS_REQ(1));
     mrb_define_method(mrb, cls, "eof?",     mrb_sftp_f_eof,    MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "sync",     mrb_sftp_f_sync,   MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "close",    mrb_sftp_f_close,  MRB_ARGS_NONE());

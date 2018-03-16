@@ -182,6 +182,20 @@ SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
     assert_equal SFTP::PERMISSION_DENIED, sftp.last_errno
   end
 
+  assert 'SFTP::Session#download' do
+    assert_raise(RuntimeError) { dummy.download('readme.txt') }
+    assert_raise(ArgumentError) { sftp.download }
+    assert_raise(RuntimeError) { sftp.download('bad path', 'readme.txt') }
+    assert_raise(RuntimeError) { sftp.download('readme.txt', 'bad/path') }
+
+    content = sftp.download('readme.txt')
+    size    = sftp.lstat('readme.txt').size
+
+    assert_kind_of String, content
+    assert_equal size, content.size
+    assert_equal size, sftp.download('readme.txt', 'test/tmp/readme.txt')
+  end
+
   assert 'SFTP#close' do
     ssh.close
     assert_false sftp.connected?

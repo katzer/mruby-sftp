@@ -59,5 +59,18 @@ module SFTP
     def dir
       Dir.new(self)
     end
+
+    # Initiates a download from remote to local. If local is omitted, downloads
+    # the file to an in-memory buffer and returns the result as a string.
+    #
+    # @param [ String ] remote The path to the remote file to download.
+    # @param [ String ] local  The path to where to save the downloaded file.
+    #
+    # @return [ String|Int ] The downloaded content if local was omitted.
+    def download(remote, local = nil)
+      file.open(remote, 'r') do |io|
+        local ? io.download(local) : io.gets(nil)
+      end
+    end
   end
 end
