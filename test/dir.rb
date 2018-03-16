@@ -44,6 +44,8 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
       called = true
       assert_kind_of SFTP::Entry, entry
       assert_kind_of String, entry.name
+      assert_kind_of String, entry.longname
+      assert_true entry.longname.length > entry.name.length
       assert_kind_of SFTP::Stat, entry.stats
     end
 

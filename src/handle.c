@@ -146,29 +146,30 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
 }
 
 static mrb_value
-mrb_sftp_readdir (mrb_state *mrb, mrb_value self)
+mrb_sftp_f_gets_dir (mrb_state *mrb, mrb_value self)
 {
     struct RClass *cls = mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "Entry");
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
     LIBSSH2_SFTP_ATTRIBUTES attrs;
-    char mem[256];
-    mrb_value args[2];
+    char entry[256], longentry[512];
+    mrb_value args[3];
     int rc;
 
-    while ((rc = libssh2_sftp_readdir(handle, mem, 256, &attrs)) == LIBSSH2_ERROR_EAGAIN);
+    while ((rc = libssh2_sftp_readdir_ex(handle, entry, 256, longentry, 512, &attrs)) == LIBSSH2_ERROR_EAGAIN);
 
     if (rc <= 0) {
         return mrb_nil_value();
     }
 
-    args[0] = mrb_str_new(mrb, mem, rc);
-    args[1] = mrb_sftp_stat_obj(mrb, &attrs);
+    args[0] = mrb_str_new(mrb, entry, rc);
+    args[1] = mrb_str_new_cstr(mrb, longentry);
+    args[2] = mrb_sftp_stat_obj(mrb, &attrs);
 
-    return mrb_obj_new(mrb, cls, 2, args);
+    return mrb_obj_new(mrb, cls, 3, args);
 }
 
 static mrb_value
-mrb_sftp_readfile (mrb_state *mrb, mrb_value self)
+mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
 {
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
     mrb_value arg, opts, res, buf = mrb_attr_get(mrb, self, SYM_BUF);
@@ -371,10 +372,10 @@ mrb_sftp_f_gets (mrb_state *mrb, mrb_value self)
     mrb_sftp_raise_unless_opened(mrb, handle);
 
     if (mrb_sftp_type(mrb, self) == LIBSSH2_SFTP_OPENDIR) {
-        return mrb_sftp_readdir(mrb, self);
+        return mrb_sftp_f_gets_dir(mrb, self);
     }
 
-    return mrb_sftp_readfile(mrb, self);
+    return mrb_sftp_f_gets_file(mrb, self);
 }
 
 static mrb_value

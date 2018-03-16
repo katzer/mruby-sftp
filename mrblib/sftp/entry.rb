@@ -24,21 +24,15 @@ module SFTP
   # Represents a single named item on the remote server.
   # This includes the name and the attributes.
   class Entry
-    # Initializes a new instance of SFTP::Entry.
-    #
-    # @param [ String ]     name The name of the dir entry.
-    # @param [ SFTP::Stat ] stat The stat object.
-    #
-    # @return [ Void ]
-    def initialize(name, stat)
-      @name  = name
-      @stats = stat
-    end
-
     # The name of the dir entry.
     #
     # @return [ String ]
     attr_reader :name
+
+    # The long name of the dir entry.
+    #
+    # @return [ String ]
+    attr_reader :longname
 
     # The stats of the dir entry.
     #
@@ -57,6 +51,21 @@ module SFTP
     # @return [ Boolean ]
     def directory?
       @stats.directory?
+    end
+
+    protected
+
+    # Initializes a new instance of SFTP::Entry.
+    #
+    # @param [ String ]     name The name of the dir entry.
+    # @param [ String ]     name The long name of the dir entry.
+    # @param [ SFTP::Stat ] stat The stat object.
+    #
+    # @return [ Void ]
+    def initialize(name, longname, stat)
+      @name     = name
+      @longname = longname
+      @stats    = stat
     end
   end
 end

@@ -27,15 +27,20 @@ end
 assert 'SFTP::Entry#initialize' do
   assert_raise(ArgumentError) { SFTP::Entry.new }
   assert_raise(ArgumentError) { SFTP::Entry.new 'a' }
+  assert_raise(ArgumentError) { SFTP::Entry.new 'a', 'aa' }
 end
 
+entry = SFTP::Entry.new 'readme.txt', 'rwx readme.txt', SFTP::Stat.new(uid: 123)
+
 assert 'SFTP::Entry#name' do
-  entry = SFTP::Entry.new('readme.txt', SFTP::Stat.new)
   assert_equal 'readme.txt', entry.name
 end
 
+assert 'SFTP::Entry#longname' do
+  assert_equal 'rwx readme.txt', entry.longname
+end
+
 assert 'SFTP::Entry#stats' do
-  entry = SFTP::Entry.new('readme.txt', SFTP::Stat.new(uid: 123))
   assert_kind_of SFTP::Stat, entry.stats
   assert_equal 123, entry.stats.uid
 end
