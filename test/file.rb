@@ -132,6 +132,14 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
     assert_kind_of String, lines.last
   end
 
+  assert 'SFTP::File#write', 'readonly server :(' do
+    assert_raise(RuntimeError) { dummy.write('Hello world') }
+    assert_raise(ArgumentError) { file.write }
+
+    file.open_file
+    assert_equal 0, file.write('Hello world')
+  end
+
   assert 'SFTP::File#sync' do
     file.close
     assert_raise(RuntimeError) { file.sync }

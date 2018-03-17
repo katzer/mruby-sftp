@@ -121,7 +121,6 @@ See [file_factory.rb](mrblib/sftp/file_factory.rb), [file.rb](mrblib/sftp/file.r
 
 - Upload files and directories
 - Download directories
-- Write to remote files
 - Asynchronous IO operations
 
 ## Development

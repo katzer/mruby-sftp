@@ -422,6 +422,27 @@ mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
 }
 
 static mrb_value
+mrb_sftp_f_write (mrb_state *mrb, mrb_value self)
+{
+    const char* buf;
+    mrb_int len;
+    ssize_t ret;
+
+    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
+    mrb_sftp_raise_unless_opened(mrb, handle);
+
+    mrb_get_args(mrb, "s", &buf, &len);
+
+    while ((ret = libssh2_sftp_write(handle, buf, len) == LIBSSH2_ERROR_EAGAIN));
+
+    if (ret > 0) {
+        mrb_iv_remove(mrb, self, SYM_BUF);
+    }
+
+    return mrb_fixnum_value(ret >= 0 ? ret : 0);
+}
+
+static mrb_value
 mrb_sftp_f_eof (mrb_state *mrb, mrb_value self)
 {
     mrb_value eof               = mrb_attr_get(mrb, self, SYM_EOF);
@@ -499,6 +520,7 @@ mrb_mruby_sftp_handle_init (mrb_state *mrb)
     mrb_define_method(mrb, cls, "seek",     mrb_sftp_f_seek,   MRB_ARGS_ARG(1,1));
     mrb_define_method(mrb, cls, "gets",     mrb_sftp_f_gets,   MRB_ARGS_OPT(1));
     mrb_define_method(mrb, cls, "download", mrb_sftp_f_download, MRB_ARGS_REQ(1));
+    mrb_define_method(mrb, cls, "write",    mrb_sftp_f_write,  MRB_ARGS_REQ(1));
     mrb_define_method(mrb, cls, "eof?",     mrb_sftp_f_eof,    MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "sync",     mrb_sftp_f_sync,   MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "close",    mrb_sftp_f_close,  MRB_ARGS_NONE());

@@ -102,5 +102,32 @@ module SFTP
       loop { break unless (line = gets(sep, opts)) && lines << line }
       lines
     end
+
+    # Writes each argument to the stream. If +$+ is set, it will be written
+    # after all arguments have been written.
+    #
+    # @param [ String ] *items One or more strings to write.
+    #
+    # @return [ Void ]
+    def print(*items)
+      items.each { |item| write(item) }
+      write($\) if $\
+      nil
+    end
+
+    # Writes each argument to the stream, appending a newline to any item that
+    # does not already end in a newline. Array arguments are flattened.
+    #
+    # @param [ String ] *items One or more strings to write.
+    #
+    # @return [ Void ]
+    def puts(*items)
+      items.each do |item|
+        puts(*item) && next if item.is_a? Array
+        data = items.to_s
+        write(data[-1] == "\n" ? data : "#{data}\n")
+      end
+      nil
+    end
   end
 end
