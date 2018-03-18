@@ -110,24 +110,31 @@ module SFTP
     #
     # @return [ Void ]
     def print(*items)
-      items.each { |item| write(item) }
-      write($\) if $\
-      nil
+      items.each { |item| write(item.to_s) }
+      write($\) && nil if $\
     end
 
     # Writes each argument to the stream, appending a newline to any item that
-    # does not already end in a newline. Array arguments are flattened.
+    # does not already end in a newline.
     #
     # @param [ String ] *items One or more strings to write.
     #
     # @return [ Void ]
     def puts(*items)
       items.each do |item|
-        puts(*item) && next if item.is_a? Array
-        data = items.to_s
+        data = item.to_s
         write(data[-1] == "\n" ? data : "#{data}\n")
       end
       nil
+    end
+
+    # Writes the string to the stream.
+    #
+    # @param [ String ] str The string to write.
+    #
+    # @return [ SFTP::File ] self
+    def <<(str)
+      write(str.to_s) && self
     end
   end
 end

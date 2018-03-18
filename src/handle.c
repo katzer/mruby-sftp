@@ -140,7 +140,7 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
         handle = libssh2_sftp_open_ex(sftp, path, len, flags, mode, type);
 
         if (!handle && libssh2_session_last_errno(ssh) != LIBSSH2_ERROR_EAGAIN) {
-            mrb_raise(mrb, E_RUNTIME_ERROR, "The system cannot find the dir specified.");
+            mrb_raise(mrb, E_RUNTIME_ERROR, "Unable to open the remote path.");
         }
     } while (!handle);
 

@@ -54,7 +54,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
     assert_raise(RuntimeError) { dummy.getc }
     assert_raise(ArgumentError) { dummy.getc(2) }
 
-    file.open_file
+    file.open
     file.rewind
 
     assert_equal 1, file.getc.size
@@ -65,7 +65,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
     assert_raise(TypeError) { dummy.read("\n") }
     assert_raise(TypeError) { file.read(1.5) }
 
-    file.open_file
+    file.open
     file.rewind
 
     assert_equal 10, file.read(10).size
@@ -83,7 +83,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
     assert_raise(TypeError) { dummy.readline(1) }
     assert_raise(TypeError) { dummy.readline(nil) }
 
-    file.open_file
+    file.open
     file.rewind
 
     assert_equal     "\n", file.readline[-1]
@@ -98,7 +98,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
   assert 'SFTP::File#eof?' do
     assert_raise(RuntimeError) { dummy.eof? }
 
-    file.open_file
+    file.open
 
     file.rewind
     assert_false file.eof?
@@ -114,7 +114,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
     assert_raise(RuntimeError) { dummy.readlines }
     assert_raise(TypeError) { file.readlines(1.5) }
 
-    file.open_file
+    file.open
 
     file.rewind
     lines = file.readlines
@@ -132,14 +132,6 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
     assert_kind_of String, lines.last
   end
 
-  assert 'SFTP::File#write', 'readonly server :(' do
-    assert_raise(RuntimeError) { dummy.write('Hello world') }
-    assert_raise(ArgumentError) { file.write }
-
-    file.open_file
-    assert_equal 0, file.write('Hello world')
-  end
-
   assert 'SFTP::File#sync' do
     file.close
     assert_raise(RuntimeError) { file.sync }
@@ -148,5 +140,42 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
     assert_false file.sync
     assert_equal SFTP::UNSUPPORTED, sftp.last_errno
     file.close
+  end
+end
+
+SFTP.start('demo.wftpserver.com', 'demo-user', password: 'demo-user', port: 2222) do |sftp|
+  path = '/upload/mruby-sftp.txt'
+  path = "upload/#{sftp.dir.entries('upload').first.name}" unless sftp.exist? path
+
+  assert 'SFTP::File#write' do
+    sftp.file.open(path, 'w') do |file|
+      assert_kind_of Integer, file.write('Hello')
+      assert_equal 5, file.pos
+    end
+    assert_equal 5, sftp.stat(path).size
+  end
+
+  assert 'SFTP::File#<<' do
+    sftp.file.open(path, 'w') do |file|
+      assert_equal file, file << 'World!'
+      assert_equal 6, file.pos
+    end
+    assert_equal 6, sftp.stat(path).size
+  end
+
+  assert 'SFTP::File#print' do
+    sftp.file.open(path, 'w') do |file|
+      assert_nil file.print('Hello', 'World!')
+    end
+    assert_equal 11, sftp.stat(path).size
+  end
+
+  assert 'SFTP::File#puts' do
+    sftp.file.open(path, 'w') do |file|
+      assert_nil file.puts('Hello', 'World!')
+    end
+    sftp.file.open(path) do |file|
+      assert_equal "Hello\nWorld!\n", file.gets(nil)
+    end
   end
 end
