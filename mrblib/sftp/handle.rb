@@ -47,7 +47,7 @@ module SFTP
     #
     # @return [ Void ]
     def open(flags = 'r', mode = 0)
-      if @session.file.lstat(path).directory?
+      if @session.lstat(path).directory?
         open_dir
       else
         open_file(flags, mode)
