@@ -115,7 +115,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
 end
 ```
 
-See [file_factory.rb](mrblib/sftp/file_factory.rb), [file.rb](mrblib/sftp/file.rb), [handle.rb](mrblib/sftp/handle.rb) and [handle.c](src/handle.c) for a complete list of available methods.
+See [file_factory.rb](mrblib/sftp/file_factory.rb), [file.rb](mrblib/sftp/file.rb), [file.c](src/file.c), [handle.rb](mrblib/sftp/handle.rb) and [handle.c](src/handle.c) for a complete list of available methods.
 
 
 ## TODO

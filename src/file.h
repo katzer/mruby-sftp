@@ -26,20 +26,8 @@ extern "C" {
 #endif
 
 #include "mruby.h"
-#include <libssh2_sftp.h>
 
-struct mrb_sftp_handle
-{
-    struct RData *session;
-    LIBSSH2_SFTP_HANDLE *handle;
-};
-
-typedef struct mrb_sftp_handle mrb_sftp_handle_t;
-
-void mrb_mruby_sftp_handle_init (mrb_state *mrb);
-
-LIBSSH2_SFTP_HANDLE *mrb_sftp_handle (mrb_state *mrb, mrb_value self);
-LIBSSH2_SFTP_HANDLE *mrb_sftp_handle_bang (mrb_state *mrb, mrb_value self);
+void mrb_mruby_sftp_file_init (mrb_state *mrb);
 
 #ifdef __cplusplus
 }

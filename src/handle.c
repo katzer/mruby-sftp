@@ -34,7 +34,6 @@
 #include "mruby/ext/sftp.h"
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <libssh2_sftp.h>
 
@@ -86,6 +85,14 @@ mrb_sftp_raise_unless_opened (mrb_state *mrb, LIBSSH2_SFTP_HANDLE *handle)
 {
     if (handle && mrb_ssh_initialized()) return;
     mrb_raise(mrb, E_RUNTIME_ERROR, "SFTP handle not opened.");
+}
+
+LIBSSH2_SFTP_HANDLE *
+mrb_sftp_handle_bang (mrb_state *mrb, mrb_value self)
+{
+    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
+    mrb_sftp_raise_unless_opened(mrb, handle);
+    return handle;
 }
 
 static int
@@ -149,8 +156,8 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
 static mrb_value
 mrb_sftp_f_gets_dir (mrb_state *mrb, mrb_value self)
 {
-    struct RClass *cls = mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "Entry");
-    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
+    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle_bang(mrb, self);
+    struct RClass *cls          = mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "Entry");
     LIBSSH2_SFTP_ATTRIBUTES attrs;
     char entry[256], longentry[512];
     mrb_value args[3];
@@ -172,7 +179,7 @@ mrb_sftp_f_gets_dir (mrb_state *mrb, mrb_value self)
 static mrb_value
 mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
 {
-    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
+    LIBSSH2_SFTP_HANDLE *handle   = mrb_sftp_handle_bang(mrb, self);
     mrb_value arg, opts, res, buf = mrb_attr_get(mrb, self, SYM_BUF);
     mrb_bool arg_given = FALSE, mem_size_given = FALSE;
     unsigned int mem_size = 256, sep_len = 0;
@@ -323,11 +330,9 @@ mrb_sftp_f_open_file (mrb_state *mrb, mrb_value self) {
 static mrb_value
 mrb_sftp_f_pos (mrb_state *mrb, mrb_value self)
 {
+    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle_bang(mrb, self);
     mrb_value buf               = mrb_attr_get(mrb, self, SYM_BUF);
-    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
     int pos;
-
-    mrb_sftp_raise_unless_opened(mrb, handle);
 
     pos = libssh2_sftp_tell64(handle);
 
@@ -341,10 +346,9 @@ mrb_sftp_f_pos (mrb_state *mrb, mrb_value self)
 static mrb_value
 mrb_sftp_f_seek (mrb_state *mrb, mrb_value self)
 {
+    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle_bang(mrb, self);
     mrb_int offset              = 0;
     mrb_sym whence              = SYM_SET;
-    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
-    mrb_sftp_raise_unless_opened(mrb, handle);
 
     mrb_get_args(mrb, "i|n", &offset, &whence);
 
@@ -366,134 +370,20 @@ mrb_sftp_f_seek (mrb_state *mrb, mrb_value self)
 static mrb_value
 mrb_sftp_f_gets (mrb_state *mrb, mrb_value self)
 {
-    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
-    mrb_sftp_raise_unless_opened(mrb, handle);
-
-    if (mrb_sftp_type(mrb, self) == LIBSSH2_SFTP_OPENDIR) {
-        return mrb_sftp_f_gets_dir(mrb, self);
+    switch (mrb_sftp_type(mrb, self)) {
+        case LIBSSH2_SFTP_OPENDIR:
+            return mrb_sftp_f_gets_dir(mrb, self);
+        default:
+            return mrb_sftp_f_gets_file(mrb, self);
     }
-
-    return mrb_sftp_f_gets_file(mrb, self);
-}
-
-static mrb_value
-mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
-{
-    size_t mem_size = 3200000;
-    const char* path;
-    long size = 0;
-    mrb_int len;
-    FILE *file;
-    char *mem;
-    int rc;
-
-    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
-    mrb_sftp_raise_unless_opened(mrb, handle);
-
-    libssh2_sftp_rewind(handle);
-    mrb_iv_remove(mrb, self, SYM_BUF);
-
-    mrb_get_args(mrb, "s", &path, &len);
-
-    if (!(file = fopen(path, "wb"))) {
-        mrb_raise(mrb, E_RUNTIME_ERROR, "Cannot open the path specified.");
-    }
-
-    mem = malloc(mem_size * sizeof(char));
-
-  read:
-
-    while ((rc = libssh2_sftp_read(handle, mem, mem_size)) == LIBSSH2_ERROR_EAGAIN);
-
-    if (rc < 0) goto done;
-
-    fwrite(mem, sizeof(char), rc, file);
-    size += rc;
-
-    if (rc > 0) goto read;
-
-  done:
-
-    free(mem);
-    fclose(file);
-    mrb_iv_set(mrb, self, SYM_EOF, mrb_true_value());
-
-    return mrb_fixnum_value(size);
-}
-
-static mrb_value
-mrb_sftp_f_upload (mrb_state *mrb, mrb_value self)
-{
-    size_t mem_size = 3200000;
-    const char* path;
-    long size = 0;
-    mrb_int len;
-    FILE *file;
-    char *mem;
-    size_t rc;
-
-    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
-    mrb_sftp_raise_unless_opened(mrb, handle);
-
-    libssh2_sftp_rewind(handle);
-    mrb_iv_remove(mrb, self, SYM_BUF);
-
-    mrb_get_args(mrb, "s", &path, &len);
-
-    if (!(file = fopen(path, "rb"))) {
-        mrb_raise(mrb, E_RUNTIME_ERROR, "Cannot open the path specified.");
-    }
-
-    mem = malloc(mem_size * sizeof(char));
-
-  read:
-
-    rc = fread(mem, sizeof(char), mem_size, file);
-
-    if (rc <= 0) goto done;
-
-    while ((rc = libssh2_sftp_write(handle, mem, rc)) == LIBSSH2_ERROR_EAGAIN);
-
-    size += rc;
-
-    goto read;
-
-  done:
-
-    free(mem);
-    fclose(file);
-    mrb_iv_set(mrb, self, SYM_EOF, mrb_true_value());
-
-    return mrb_fixnum_value(size);
-}
-
-static mrb_value
-mrb_sftp_f_write (mrb_state *mrb, mrb_value self)
-{
-    const char* buf;
-    mrb_int len;
-    ssize_t ret;
-
-    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
-    mrb_sftp_raise_unless_opened(mrb, handle);
-
-    mrb_get_args(mrb, "s", &buf, &len);
-
-    while ((ret = libssh2_sftp_write(handle, buf, len) == LIBSSH2_ERROR_EAGAIN));
-
-    if (ret > 0) {
-        mrb_iv_remove(mrb, self, SYM_BUF);
-    }
-
-    return mrb_fixnum_value(ret >= 0 ? ret : 0);
 }
 
 static mrb_value
 mrb_sftp_f_eof (mrb_state *mrb, mrb_value self)
 {
-    mrb_value eof               = mrb_attr_get(mrb, self, SYM_EOF);
-    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
-    mrb_sftp_raise_unless_opened(mrb, handle);
+    mrb_value eof = mrb_attr_get(mrb, self, SYM_EOF);
+
+    mrb_sftp_handle_bang(mrb, self);
 
     return mrb_bool_value(mrb_test(eof) ? TRUE : FALSE);
 }
@@ -501,10 +391,8 @@ mrb_sftp_f_eof (mrb_state *mrb, mrb_value self)
 static mrb_value
 mrb_sftp_f_sync (mrb_state *mrb, mrb_value self)
 {
-    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
+    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle_bang(mrb, self);
     int ret;
-
-    mrb_sftp_raise_unless_opened(mrb, handle);
 
     while ((ret = libssh2_sftp_fsync(handle)) == LIBSSH2_ERROR_EAGAIN);
 
@@ -565,9 +453,6 @@ mrb_mruby_sftp_handle_init (mrb_state *mrb)
     mrb_define_method(mrb, cls, "pos",      mrb_sftp_f_pos,    MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "seek",     mrb_sftp_f_seek,   MRB_ARGS_ARG(1,1));
     mrb_define_method(mrb, cls, "gets",     mrb_sftp_f_gets,   MRB_ARGS_OPT(1));
-    mrb_define_method(mrb, cls, "download", mrb_sftp_f_download, MRB_ARGS_REQ(1));
-    mrb_define_method(mrb, cls, "upload",   mrb_sftp_f_upload, MRB_ARGS_REQ(1));
-    mrb_define_method(mrb, cls, "write",    mrb_sftp_f_write,  MRB_ARGS_REQ(1));
     mrb_define_method(mrb, cls, "eof?",     mrb_sftp_f_eof,    MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "sync",     mrb_sftp_f_sync,   MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "close",    mrb_sftp_f_close,  MRB_ARGS_NONE());

@@ -23,6 +23,7 @@
 
 #include "session.h"
 #include "handle.h"
+#include "file.h"
 #include "stat.h"
 
 #include "mruby.h"
@@ -58,6 +59,7 @@ mrb_mruby_sftp_gem_init (mrb_state *mrb)
 
     mrb_mruby_sftp_session_init(mrb);
     mrb_mruby_sftp_handle_init(mrb);
+    mrb_mruby_sftp_file_init(mrb);
     mrb_mruby_sftp_stat_init(mrb);
 }
 
