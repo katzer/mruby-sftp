@@ -63,6 +63,7 @@ The Session class encapsulates a single SFTP channel on a SSH connection. Instan
 ```ruby
 SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
   sftp.download('remote/file', 'local/file') if sftp.exist? 'remote/file'
+  sftp.upload('local/file', ''remote/file'')
 end
 ```
 
@@ -119,8 +120,7 @@ See [file_factory.rb](mrblib/sftp/file_factory.rb), [file.rb](mrblib/sftp/file.r
 
 ## TODO
 
-- Upload files and directories
-- Download directories
+- Upload/Download directories
 - Asynchronous IO operations
 
 ## Development

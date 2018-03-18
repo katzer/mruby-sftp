@@ -60,6 +60,16 @@ module SFTP
       Dir.new(self)
     end
 
+    # Initiates an upload from local to remote.
+    #
+    # @param [ String ] local  The path from where to read the content.
+    # @param [ String ] remote The path to the remote file where to upload.
+    #
+    # @return [ Void ]
+    def upload(local, remote)
+      file.open(remote, 'w') { |io| io.upload(local) }
+    end
+
     # Initiates a download from remote to local. If local is omitted, downloads
     # the file to an in-memory buffer and returns the result as a string.
     #
