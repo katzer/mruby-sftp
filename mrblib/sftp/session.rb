@@ -64,10 +64,12 @@ module SFTP
     #
     # @param [ String ] local  The path from where to read the content.
     # @param [ String ] remote The path to the remote file where to upload.
+    # @param [ Int ]    mode   The mode in case of the file has to be created.
+    #                          Defaults to: 0o644
     #
     # @return [ Void ]
-    def upload(local, remote)
-      file.open(remote, 'w') { |io| io.upload(local) }
+    def upload(local, remote, mode = 0o644)
+      file.open(remote, 'w', mode) { |io| io.upload(local) }
     end
 
     # Initiates a download from remote to local. If local is omitted, downloads
