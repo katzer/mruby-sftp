@@ -48,10 +48,10 @@ module SFTP
     #
     # @return [ Void ]
     def open(flags = 'r', mode = 0o644)
-      if @session.lstat(path).directory?
-        open_dir
-      else
-        open_file(flags, mode)
+      case type = @session.stat(path).ftype
+      when :directory then open_dir
+      when :regular   then open_file(flags, mode)
+      else raise "Don't know how to open #{type}"
       end
     end
 
