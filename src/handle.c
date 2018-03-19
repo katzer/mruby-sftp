@@ -332,7 +332,7 @@ mrb_sftp_f_pos (mrb_state *mrb, mrb_value self)
 {
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle_bang(mrb, self);
     mrb_value buf               = mrb_attr_get(mrb, self, SYM_BUF);
-    int pos;
+    libssh2_uint64_t pos;
 
     pos = libssh2_sftp_tell64(handle);
 

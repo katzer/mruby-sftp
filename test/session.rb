@@ -88,8 +88,10 @@ assert 'SFTP#connect' do
   assert_false sftp.connected?
 end
 
-SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
+SSH.start('demo.wftpserver.com', 'demo-user', password: 'demo-user', port: 2222) do |ssh|
   sftp = ssh.sftp
+  path = '/upload/mruby-sftp.txt'
+  path = "upload/#{sftp.dir.entries('upload').first.name}" unless sftp.exist? path
 
   assert 'SSH#sftp' do
     assert_kind_of SFTP::Session, sftp
@@ -98,36 +100,36 @@ SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
   end
 
   assert 'SFTP::Session#exist?' do
-    assert_raise(RuntimeError) { dummy.exist? '/pub' }
+    assert_raise(RuntimeError) { dummy.exist? '/upload' }
     assert_raise(ArgumentError) { sftp.exist? }
-    assert_true  sftp.exist? '/pub'
-    assert_true  sftp.exist? 'readme.txt'
+    assert_true  sftp.exist? '/upload'
+    assert_true  sftp.exist? path
     assert_false sftp.exist? 'I am wrong'
   end
 
   assert 'SFTP::Session#realpath' do
-    assert_raise(RuntimeError) { dummy.realpath('pub') }
+    assert_raise(RuntimeError) { dummy.realpath('upload') }
     assert_raise(ArgumentError) { sftp.realpath }
-    assert_equal '/pub', sftp.realpath('pub')
+    assert_equal '/upload', sftp.realpath('upload')
   end
 
   assert 'SFTP::Session#stat' do
-    assert_raise(RuntimeError) { dummy.stat('/pub') }
+    assert_raise(RuntimeError) { dummy.stat('/upload') }
     assert_raise(ArgumentError) { sftp.stat }
-    assert_kind_of SFTP::Stat, sftp.stat('/pub')
+    assert_kind_of SFTP::Stat, sftp.stat('/upload')
   end
 
   assert 'SFTP::Session#lstat' do
-    assert_raise(RuntimeError) { dummy.lstat('/pub') }
+    assert_raise(RuntimeError) { dummy.lstat('/upload') }
     assert_raise(ArgumentError) { sftp.lstat }
-    assert_kind_of SFTP::Stat, sftp.lstat('/pub')
+    assert_kind_of SFTP::Stat, sftp.lstat('/upload')
   end
 
   assert 'SFTP::Session#fstat' do
-    assert_raise(RuntimeError) { dummy.fstat('/pub') }
+    assert_raise(RuntimeError) { dummy.fstat('/upload') }
     assert_raise(ArgumentError) { sftp.fstat }
-    assert_kind_of SFTP::Stat, sftp.fstat('/pub')
-    assert_true sftp.fstat('/pub').directory?
+    assert_kind_of SFTP::Stat, sftp.fstat('/upload')
+    assert_true sftp.fstat('/upload').directory?
   end
 
   assert 'SFTP::Session#last_errno' do
@@ -136,17 +138,17 @@ SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
   end
 
   assert 'SFTP::Session#setstat', 'readonly server :(' do
-    assert_raise(RuntimeError) { dummy.setstat('readme.txt', uid: 1) }
+    assert_raise(RuntimeError) { dummy.setstat(path, uid: 1) }
     assert_raise(ArgumentError) { sftp.setstat }
-    assert_raise(ArgumentError) { sftp.setstat 'readme.txt' }
-    assert_false sftp.setstat('readme.txt', uid: 1)
-    assert_equal SFTP::PERMISSION_DENIED, sftp.last_errno
+    assert_raise(ArgumentError) { sftp.setstat path }
+    assert_false sftp.setstat(path, mode: 0o777)
+    assert_not_equal 0, sftp.last_errno
   end
 
   assert 'SFTP::Session#delete', 'readonly server :(' do
-    assert_raise(RuntimeError) { dummy.delete('readme.txt') }
+    assert_raise(RuntimeError) { dummy.delete(path) }
     assert_raise(ArgumentError) { sftp.delete }
-    assert_false sftp.delete('readme.txt')
+    assert_false sftp.delete(path)
     assert_equal SFTP::PERMISSION_DENIED, sftp.last_errno
   end
 
@@ -161,39 +163,63 @@ SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
   assert 'SFTP::Session#rmdir', 'readonly server :(' do
     assert_raise(RuntimeError) { dummy.rmdir('/dir') }
     assert_raise(ArgumentError) { sftp.rmdir }
-    assert_false sftp.rmdir('/pub')
+    assert_false sftp.rmdir('/upload')
     assert_equal SFTP::PERMISSION_DENIED, sftp.last_errno
   end
 
-  assert 'SFTP::Session#symlink', 'readonly server :(' do
-    assert_raise(RuntimeError) { dummy.symlink('readme.txt', 'link') }
+  assert 'SFTP::Session#symlink' do
+    assert_raise(RuntimeError) { dummy.symlink(path, 'link') }
     assert_raise(ArgumentError) { sftp.symlink }
-    assert_raise(ArgumentError) { sftp.symlink('readme.txt') }
-    assert_false sftp.symlink('/readme.txt', '/readme_link.txt')
+    assert_raise(ArgumentError) { sftp.symlink(path) }
+    assert_true sftp.symlink(path, "#{path}.link")
   end
 
   assert 'SFTP::Session#rename', 'readonly server :(' do
-    assert_raise(RuntimeError) { dummy.rename('readme.txt', 'link') }
+    assert_raise(RuntimeError) { dummy.rename(path, 'link') }
     assert_raise(ArgumentError) { sftp.rename }
-    assert_raise(ArgumentError) { sftp.rename('readme.txt') }
-    assert_false sftp.rename('readme.txt', 'readme2.txt')
+    assert_raise(ArgumentError) { sftp.rename(path) }
+    assert_false sftp.rename(path, "#{path}.new")
     assert_equal SFTP::PERMISSION_DENIED, sftp.last_errno
-    assert_false sftp.rename('readme.txt', 'readme2.txt', SFTP::RENAME_ATOMIC)
+    assert_false sftp.rename(path, "#{path}.new", SFTP::RENAME_ATOMIC)
     assert_equal SFTP::PERMISSION_DENIED, sftp.last_errno
   end
 
   assert 'SFTP::Session#download' do
-    assert_raise(RuntimeError) { dummy.download('readme.txt') }
+    assert_raise(RuntimeError) { dummy.download(path) }
     assert_raise(ArgumentError) { sftp.download }
-    assert_raise(RuntimeError) { sftp.download('bad path', 'readme.txt') }
-    assert_raise(RuntimeError) { sftp.download('readme.txt', 'bad/path') }
+    assert_raise(RuntimeError) { sftp.download('bad path', path) }
+    assert_raise(RuntimeError) { sftp.download(path, 'bad/path') }
 
-    content = sftp.download('readme.txt')
-    size    = sftp.lstat('readme.txt').size
+    content = sftp.download(path)
+    size    = sftp.stat(path).size
 
     assert_kind_of String, content
     assert_equal size, content.size
-    assert_equal size, sftp.download('readme.txt', 'test/tmp/readme.txt')
+    assert_equal size, sftp.download(path, 'test/tmp/readme.txt')
+  end
+
+  assert 'SFTP::Session#read' do
+    assert_raise(RuntimeError) { dummy.read(path) }
+    assert_raise(ArgumentError) { sftp.download }
+
+    content = sftp.read(path)
+    size    = sftp.stat(path).size
+
+    assert_equal size, content.size
+    assert_equal content[0, 10], sftp.read(path, 10)
+    assert_equal content[0, 10], sftp.read(path, 10, 0)
+    assert_equal content[1, 10], sftp.read(path, 10, 1)
+    assert_equal content[1, 10], sftp.read(path, 10, 1, mode: 'r')
+  end
+
+  assert 'SFTP::Session#write' do
+    assert_equal 13, sftp.write(path, 'Session#write')
+    assert_equal 13, sftp.write(path, 'Session#write')
+    assert_equal 'Session#write', sftp.read(path)
+    assert_equal 5, sftp.write(path, 'write', nil, mode: 'a')
+    assert_equal 'Session#writewrite', sftp.read(path)
+    assert_equal 5, sftp.write(path, 'write', 1)
+    assert_equal 'Swriten#writewrite', sftp.read(path)
   end
 
   assert 'SFTP#close' do

@@ -81,7 +81,49 @@ module SFTP
     # @return [ String|Int ] The downloaded content if local was omitted.
     def download(remote, local = nil)
       file.open(remote, 'r') do |io|
-        local ? io.download(local) : io.gets(nil)
+        if local
+          io.download(local)
+        else
+          io.gets(nil)
+        end
+      end
+    end
+
+    # Opens the file, optionally seeks to the given offset, then returns length
+    # bytes (defaulting to the rest of the file). The methos ensures the file is
+    # closed before returning.
+    #
+    # @param [ String ] path The path to the remote file.
+    # @param [ Int ]    size Optional amount of bytes to read.
+    #                        Defaults to: nil
+    # @param [ Int ]  offset Optional position from where to start reading.
+    #                        Defaults to: 0
+    #
+    # @return [ String ]
+    def read(path, size = nil, offset = 0, opts = {})
+      file.open(path, opts[:mode] || 'r') do |io|
+        io.pos = offset if offset
+        io.gets(size)
+      end
+    end
+
+    # Opens the file, optionally seeks to the given offset, writes string, then
+    # returns the length written. write ensures the file is closed before
+    # returning. If offset is not given, the file is truncated. Otherwise, it is
+    # not truncated.
+    #
+    # @param [ String ] path The path to the remote file.
+    # @param [ String ] str  The string to write.
+    # @param [ Int ]  offset Optional position from where to start reading.
+    #                        Defaults to: 0
+    #
+    # @return [ Int ]
+    def write(path, str, offset = 0, opts = {})
+      mode = (offset || 0) > 0 ? 'r+' : (opts[:mode] || 'w')
+
+      file.open(path, mode, opts[:perm] || 0o644) do |io|
+        io.pos = offset if offset
+        io.write(str)
       end
     end
   end

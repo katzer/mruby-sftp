@@ -38,7 +38,6 @@ mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
 {
     size_t mem_size = 3200000;
     const char* path;
-    long size = 0;
     mrb_int len;
     FILE *file;
     char *mem;
@@ -64,7 +63,6 @@ mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
     if (rc < 0) goto done;
 
     fwrite(mem, sizeof(char), rc, file);
-    size += rc;
 
     if (rc > 0) goto read;
 
@@ -74,7 +72,7 @@ mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
     fclose(file);
     mrb_iv_set(mrb, self, SYM_EOF, mrb_true_value());
 
-    return mrb_fixnum_value(size);
+    return mrb_fixnum_value(libssh2_sftp_tell64(handle));
 }
 
 static mrb_value
@@ -82,7 +80,6 @@ mrb_sftp_f_upload (mrb_state *mrb, mrb_value self)
 {
     size_t mem_size = 3200000;
     const char* path;
-    long size = 0;
     mrb_int len;
     FILE *file;
     char *mem;
@@ -107,9 +104,7 @@ mrb_sftp_f_upload (mrb_state *mrb, mrb_value self)
 
     if (rc <= 0) goto done;
 
-    while ((rc = libssh2_sftp_write(handle, mem, rc)) == LIBSSH2_ERROR_EAGAIN);
-
-    size += rc;
+    while (libssh2_sftp_write(handle, mem, rc) == LIBSSH2_ERROR_EAGAIN);
 
     goto read;
 
@@ -119,7 +114,7 @@ mrb_sftp_f_upload (mrb_state *mrb, mrb_value self)
     fclose(file);
     mrb_iv_set(mrb, self, SYM_EOF, mrb_true_value());
 
-    return mrb_fixnum_value(size);
+    return mrb_fixnum_value(libssh2_sftp_tell64(handle));
 }
 
 static mrb_value
@@ -127,19 +122,19 @@ mrb_sftp_f_write (mrb_state *mrb, mrb_value self)
 {
     const char* buf;
     mrb_int len;
-    ssize_t ret;
+    libssh2_uint64_t pos_before, pos_after;
 
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle_bang(mrb, self);
+    pos_before                  = libssh2_sftp_tell64(handle);
 
     mrb_get_args(mrb, "s", &buf, &len);
 
-    while ((ret = libssh2_sftp_write(handle, buf, len) == LIBSSH2_ERROR_EAGAIN));
+    while (libssh2_sftp_write(handle, buf, len) == LIBSSH2_ERROR_EAGAIN);
 
-    if (ret > 0) {
-        mrb_iv_remove(mrb, self, SYM_BUF);
-    }
+    mrb_iv_remove(mrb, self, SYM_BUF);
+    pos_after = libssh2_sftp_tell64(handle);
 
-    return mrb_fixnum_value(ret >= 0 ? ret : 0);
+    return mrb_fixnum_value(pos_after - pos_before);
 }
 
 void
@@ -150,8 +145,6 @@ mrb_mruby_sftp_file_init (mrb_state *mrb)
     ftp = mrb_module_get(mrb, "SFTP");
     sup = mrb_class_get_under(mrb, ftp, "Handle");
     cls = mrb_define_class_under(mrb, ftp, "File", sup);
-
-    // MRB_SET_INSTANCE_TT(cls, MRB_TT_DATA);
 
     SYM_EOF     = mrb_intern_static(mrb, "eof", 3);
     SYM_BUF     = mrb_intern_static(mrb, "buf", 3);
