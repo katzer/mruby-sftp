@@ -44,9 +44,10 @@ module SFTP
     #
     # @param [ String ] flags Determines how to open the file.
     # @param [ Int ]    mode  The mode in case of the file has to be created.
+    #                         Defaults to: 0o644
     #
     # @return [ Void ]
-    def open(flags = 'r', mode = 0)
+    def open(flags = 'r', mode = 0o644)
       if @session.lstat(path).directory?
         open_dir
       else
