@@ -135,47 +135,9 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
   assert 'SFTP::File#sync' do
     file.close
     assert_raise(RuntimeError) { file.sync }
-
     file.open
     assert_false file.sync
     assert_equal SFTP::UNSUPPORTED, sftp.last_errno
     file.close
-  end
-end
-
-SFTP.start('demo.wftpserver.com', 'demo-user', password: 'demo-user', port: 2222) do |sftp|
-  path = '/upload/mruby-sftp.txt'
-  path = "upload/#{sftp.dir.entries('upload').first.name}" unless sftp.exist? path
-
-  assert 'SFTP::File#write' do
-    sftp.file.open(path, 'w') do |file|
-      assert_kind_of Integer, file.write('Hello')
-      assert_equal 5, file.pos
-    end
-    assert_equal 5, sftp.stat(path).size
-  end
-
-  assert 'SFTP::File#<<' do
-    sftp.file.open(path, 'w') do |file|
-      assert_equal file, file << 'World!'
-      assert_equal 6, file.pos
-    end
-    assert_equal 6, sftp.stat(path).size
-  end
-
-  assert 'SFTP::File#print' do
-    sftp.file.open(path, 'w') do |file|
-      assert_nil file.print('Hello', 'World!')
-    end
-    assert_equal 11, sftp.stat(path).size
-  end
-
-  assert 'SFTP::File#puts' do
-    sftp.file.open(path, 'w') do |file|
-      assert_nil file.puts('Hello', 'World!')
-    end
-    sftp.file.open(path) do |file|
-      assert_equal "Hello\nWorld!\n", file.gets(nil)
-    end
   end
 end
