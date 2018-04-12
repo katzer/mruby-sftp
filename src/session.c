@@ -125,11 +125,17 @@ mrb_sftp_f_connect (mrb_state *mrb, mrb_value self)
         mrb_raise(mrb, E_RUNTIME_ERROR, "SSH session not authenticated.");
     }
 
+  init:
+
     sftp = libssh2_sftp_init(ssh->session);
 
     if (!sftp) {
-        libssh2_session_last_error(ssh->session, &err, NULL, 0);
-        mrb_raise(mrb, E_RUNTIME_ERROR, err);
+        if (libssh2_session_last_errno(ssh->session) == LIBSSH2_ERROR_EAGAIN) {
+            goto init;
+        } else {
+            libssh2_session_last_error(ssh->session, &err, NULL, 0);
+            mrb_raise(mrb, E_RUNTIME_ERROR, err);
+        }
     }
 
     data          = malloc(sizeof(mrb_sftp_t));
@@ -172,7 +178,7 @@ mrb_sftp_f_rpath (mrb_state *mrb, mrb_value self)
 
     mrb_get_args(mrb, "s", &path, &len);
 
-    libssh2_sftp_symlink_ex(sftp, path, len, rpath, 256, LIBSSH2_SFTP_REALPATH);
+    while (libssh2_sftp_symlink_ex(sftp, path, len, rpath, 256, LIBSSH2_SFTP_REALPATH) == LIBSSH2_ERROR_EAGAIN);
 
     return mrb_str_new_cstr(mrb, rpath);
 }
