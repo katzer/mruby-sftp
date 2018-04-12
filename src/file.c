@@ -25,6 +25,7 @@
 
 #include "mruby.h"
 #include "mruby/variable.h"
+#include "mruby/ext/sftp.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -32,6 +33,7 @@
 
 static mrb_sym SYM_EOF;
 static mrb_sym SYM_BUF;
+static mrb_sym SYM_SESSION;
 
 static mrb_value
 mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
@@ -43,6 +45,8 @@ mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
     char *mem;
     int rc;
 
+    mrb_value session           = mrb_attr_get(mrb, self, SYM_SESSION);
+    mrb_ssh_t *ssh              = mrb_sftp_ssh_session(session);
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle_bang(mrb, self);
 
     libssh2_sftp_rewind(handle);
@@ -58,7 +62,9 @@ mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
 
   read:
 
-    while ((rc = libssh2_sftp_read(handle, mem, mem_size)) == LIBSSH2_ERROR_EAGAIN);
+    while ((rc = libssh2_sftp_read(handle, mem, mem_size)) == LIBSSH2_ERROR_EAGAIN) {
+        mrb_ssh_wait_socket(ssh);
+    }
 
     if (rc < 0) goto done;
 
@@ -85,6 +91,8 @@ mrb_sftp_f_upload (mrb_state *mrb, mrb_value self)
     char *mem;
     size_t rc;
 
+    mrb_value session           = mrb_attr_get(mrb, self, SYM_SESSION);
+    mrb_ssh_t *ssh              = mrb_sftp_ssh_session(session);
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle_bang(mrb, self);
 
     libssh2_sftp_rewind(handle);
@@ -104,7 +112,9 @@ mrb_sftp_f_upload (mrb_state *mrb, mrb_value self)
 
     if (rc <= 0) goto done;
 
-    while (libssh2_sftp_write(handle, mem, rc) == LIBSSH2_ERROR_EAGAIN);
+    while (libssh2_sftp_write(handle, mem, rc) == LIBSSH2_ERROR_EAGAIN) {
+        mrb_ssh_wait_socket(ssh);
+    }
 
     goto read;
 
@@ -124,12 +134,16 @@ mrb_sftp_f_write (mrb_state *mrb, mrb_value self)
     mrb_int len;
     libssh2_uint64_t pos_before, pos_after;
 
+    mrb_value session           = mrb_attr_get(mrb, self, SYM_SESSION);
+    mrb_ssh_t *ssh              = mrb_sftp_ssh_session(session);
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle_bang(mrb, self);
     pos_before                  = libssh2_sftp_tell64(handle);
 
     mrb_get_args(mrb, "s", &buf, &len);
 
-    while (libssh2_sftp_write(handle, buf, len) == LIBSSH2_ERROR_EAGAIN);
+    while (libssh2_sftp_write(handle, buf, len) == LIBSSH2_ERROR_EAGAIN) {
+        mrb_ssh_wait_socket(ssh);
+    }
 
     mrb_iv_remove(mrb, self, SYM_BUF);
     pos_after = libssh2_sftp_tell64(handle);
@@ -148,6 +162,7 @@ mrb_mruby_sftp_file_init (mrb_state *mrb)
 
     SYM_EOF     = mrb_intern_static(mrb, "eof", 3);
     SYM_BUF     = mrb_intern_static(mrb, "buf", 3);
+    SYM_SESSION = mrb_intern_static(mrb, "@session", 8);
 
     mrb_define_method(mrb, cls, "download", mrb_sftp_f_download, MRB_ARGS_REQ(1));
     mrb_define_method(mrb, cls, "upload",   mrb_sftp_f_upload, MRB_ARGS_REQ(1));

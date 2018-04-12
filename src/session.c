@@ -53,18 +53,18 @@ mrb_sftp_session_free (mrb_state *mrb, void *p)
 
 static mrb_data_type const mrb_sftp_session_type = { "SFTP::Session", mrb_sftp_session_free };
 
-LIBSSH2_SFTP*
+LIBSSH2_SFTP *
 mrb_sftp_session (mrb_value self)
 {
     mrb_sftp_t *data = DATA_PTR(self);
     return (data) ? data->sftp : NULL;
 }
 
-LIBSSH2_SESSION*
+mrb_ssh_t *
 mrb_sftp_ssh_session (mrb_value self)
 {
     mrb_sftp_t *data = DATA_PTR(self);
-    return data && data->session->data ? ((mrb_ssh_t *)data->session->data)->session : NULL;
+    return data && data->session->data ? (mrb_ssh_t *)data->session->data : NULL;
 }
 
 static void
@@ -125,18 +125,18 @@ mrb_sftp_f_connect (mrb_state *mrb, mrb_value self)
         mrb_raise(mrb, E_RUNTIME_ERROR, "SSH session not authenticated.");
     }
 
-  init:
+    do {
+        sftp = libssh2_sftp_init(ssh->session);
 
-    sftp = libssh2_sftp_init(ssh->session);
+        if (sftp) break;
 
-    if (!sftp) {
         if (libssh2_session_last_errno(ssh->session) == LIBSSH2_ERROR_EAGAIN) {
-            goto init;
+            mrb_ssh_wait_socket(ssh);
         } else {
             libssh2_session_last_error(ssh->session, &err, NULL, 0);
             mrb_raise(mrb, E_RUNTIME_ERROR, err);
         }
-    }
+    } while (!sftp);
 
     data          = malloc(sizeof(mrb_sftp_t));
     data->session = mrb_ptr(session);

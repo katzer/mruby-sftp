@@ -120,7 +120,7 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
     int len;
 
     LIBSSH2_SFTP *sftp;
-    LIBSSH2_SESSION* ssh;
+    mrb_ssh_t *ssh;
     LIBSSH2_SFTP_HANDLE *handle;
     mrb_sftp_handle_t *data;
     mrb_value session;
@@ -139,7 +139,11 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
     do {
         handle = libssh2_sftp_open_ex(sftp, path, len, flags, mode, type);
 
-        if (!handle && libssh2_session_last_errno(ssh) != LIBSSH2_ERROR_EAGAIN) {
+        if (handle) break;
+
+        if (libssh2_session_last_errno(ssh->session) == LIBSSH2_ERROR_EAGAIN) {
+            mrb_ssh_wait_socket(ssh);
+        } else {
             mrb_raise(mrb, E_RUNTIME_ERROR, "Unable to open the remote path.");
         }
     } while (!handle);
@@ -156,6 +160,8 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
 static mrb_value
 mrb_sftp_f_gets_dir (mrb_state *mrb, mrb_value self)
 {
+    mrb_value session           = mrb_attr_get(mrb, self, SYM_SESSION);
+    mrb_ssh_t *ssh              = mrb_sftp_ssh_session(session);
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle_bang(mrb, self);
     struct RClass *cls          = mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "Entry");
     LIBSSH2_SFTP_ATTRIBUTES attrs;
@@ -163,11 +169,12 @@ mrb_sftp_f_gets_dir (mrb_state *mrb, mrb_value self)
     mrb_value args[3];
     int rc;
 
-    while ((rc = libssh2_sftp_readdir_ex(handle, entry, 256, longentry, 512, &attrs)) == LIBSSH2_ERROR_EAGAIN);
-
-    if (rc <= 0) {
-        return mrb_nil_value();
+    while ((rc = libssh2_sftp_readdir_ex(handle, entry, 256, longentry, 512, &attrs)) == LIBSSH2_ERROR_EAGAIN) {
+        mrb_ssh_wait_socket(ssh);
     }
+
+    if (rc <= 0)
+        return mrb_nil_value();
 
     args[0] = mrb_str_new(mrb, entry, rc);
     args[1] = mrb_str_new_cstr(mrb, longentry);
@@ -179,6 +186,8 @@ mrb_sftp_f_gets_dir (mrb_state *mrb, mrb_value self)
 static mrb_value
 mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
 {
+    mrb_value session             = mrb_attr_get(mrb, self, SYM_SESSION);
+    mrb_ssh_t *ssh                = mrb_sftp_ssh_session(session);
     LIBSSH2_SFTP_HANDLE *handle   = mrb_sftp_handle_bang(mrb, self);
     mrb_value arg, opts, res, buf = mrb_attr_get(mrb, self, SYM_BUF);
     mrb_bool arg_given = FALSE, mem_size_given = FALSE;
@@ -232,7 +241,9 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
 
   read:
 
-    while ((rc = libssh2_sftp_read(handle, mem, mem_size)) == LIBSSH2_ERROR_EAGAIN);
+    while ((rc = libssh2_sftp_read(handle, mem, mem_size)) == LIBSSH2_ERROR_EAGAIN) {
+        mrb_ssh_wait_socket(ssh);
+    };
 
     if (rc <= 0) {
         free(mem);

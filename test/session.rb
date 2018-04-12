@@ -79,7 +79,7 @@ assert 'SFTP#connect' do
   assert_false sftp.connected?
 end
 
-SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
+SSH.start('test.rebex.net', 'demo', password: 'password', block: false) do |ssh|
   sftp = ssh.sftp
 
   assert 'SSH#sftp' do
