@@ -38,7 +38,7 @@ end
 
 ## Usage
 
-To initiate a SFTP session it is recommended to use either `SFTP.open`
+To initiate a SFTP session it is recommended to use either `SFTP.start`
 
 ```ruby
 SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
@@ -116,12 +116,6 @@ end
 ```
 
 See [file_factory.rb](mrblib/sftp/file_factory.rb), [file.rb](mrblib/sftp/file.rb), [file.c](src/file.c), [handle.rb](mrblib/sftp/handle.rb) and [handle.c](src/handle.c) for a complete list of available methods.
-
-
-## TODO
-
-- Upload/Download directories
-- Asynchronous IO operations
 
 ## Development
 
