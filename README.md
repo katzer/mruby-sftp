@@ -54,7 +54,7 @@ SSH.start('test.rebex.net', 'demo', key: '~/.ssh/id_rsa') do |session|
 end
 ```
 
-_SFTP.open_ works the same way like _SSH.open_. See the doc for [mruby-ssh][mruby_ssh] for how to connect and login to a SSH server.
+_SFTP.start works the same way like _SSH.start. See the doc for [mruby-ssh][mruby_ssh] for how to connect and login to a SSH server.
 
 ### SFTP::Session
 
