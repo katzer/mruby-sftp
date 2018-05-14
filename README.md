@@ -126,7 +126,7 @@ To make us of it add the line below to your `build_config.rb`:
 ```ruby
 MRuby::Build.new do |conf|
   # ... (snip) ...
-  conf.cc.defines << 'LIBSSH2_HAVE_ZLIB'
+  conf.cc.defines += %w[LIBSSH2_HAVE_ZLIB HAVE_UNISTD_H]
 end
 ```
 
@@ -135,7 +135,7 @@ Or add this line to your aplication's `mrbgem.rake`:
 ```ruby
 MRuby::Gem::Specification.new('your-mrbgem') do |spec|
   # ... (snip) ...
-  spec.mruby.cc.defines << 'LIBSSH2_HAVE_ZLIB'
+  spec.mruby.cc.defines += %w[LIBSSH2_HAVE_ZLIB HAVE_UNISTD_H]
 end
 ```
 
