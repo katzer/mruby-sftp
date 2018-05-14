@@ -141,11 +141,8 @@ end
 
 Now initiate a new SFTP session with `compress:true`:
 
-
 ```ruby
-SFTP.start('test.rebex.net', 'demo', password: 'password', compress: true) do |sftp|
-  # Uses compression if compiled with LIBSSH2_HAVE_ZLIB flag
-end
+SFTP.start('test.rebex.net', 'demo', password: 'password', compress: true)
 ``` 
 
 ## Development
