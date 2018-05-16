@@ -88,6 +88,11 @@ SSH.start('test.rebex.net', 'demo', password: 'password', block: false) do |ssh|
     assert_true sftp.connected?
   end
 
+  assert 'SFTP::Session#host' do
+    assert_nil dummy.host
+    assert_equal ssh.host, sftp.host
+  end
+
   assert 'SFTP::Session#exist?' do
     assert_raise(RuntimeError) { dummy.exist? '/pub' }
     assert_raise(ArgumentError) { sftp.exist? }

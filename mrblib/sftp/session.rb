@@ -44,6 +44,13 @@ module SFTP
       !closed?
     end
 
+    # Shorthand for "self.session.host"
+    #
+    # @return [ String ] nil if not connected.
+    def host
+      @session.host
+    end
+
     # Returns an SFTP::FileFactory instance, which can be used to mimic
     # synchronous, IO-like file operations on a remote file via SFTP.
     #
