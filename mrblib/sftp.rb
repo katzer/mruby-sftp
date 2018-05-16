@@ -30,7 +30,7 @@ module SFTP
   # @param [ Hash ]   opts See SFTP::Session.new
   #
   # @return [ Net::FTP ]
-  def self.start(host, user = nil, opts = {})
+  def self.start(host = nil, user = nil, opts = {})
     ssh  = SSH.start(host, user, opts)
     sftp = Session.new(ssh)
 
