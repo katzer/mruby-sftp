@@ -48,7 +48,7 @@ mrb_sftp_session_free (mrb_state *mrb, void *p)
         libssh2_sftp_shutdown(data->sftp);
     }
 
-    free(data);
+    mrb_free(mrb, data);
 }
 
 static mrb_data_type const mrb_sftp_session_type = { "SFTP::Session", mrb_sftp_session_free };
@@ -138,7 +138,7 @@ mrb_sftp_f_connect (mrb_state *mrb, mrb_value self)
         }
     } while (!sftp);
 
-    data          = malloc(sizeof(mrb_sftp_t));
+    data          = mrb_malloc(mrb, sizeof(mrb_sftp_t));
     data->session = mrb_ptr(session);
     data->sftp    = sftp;
 

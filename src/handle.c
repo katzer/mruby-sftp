@@ -33,7 +33,6 @@
 #include "mruby/variable.h"
 #include "mruby/ext/sftp.h"
 
-#include <stdlib.h>
 #include <string.h>
 #include <libssh2_sftp.h>
 
@@ -68,7 +67,7 @@ mrb_sftp_handle_free (mrb_state *mrb, void *p)
         libssh2_sftp_close_handle(data->handle);
     }
 
-    free(data);
+    mrb_free(mrb, data);
 }
 
 static mrb_data_type const mrb_sftp_handle_type = { "SFTP::Handle", mrb_sftp_handle_free };
@@ -148,7 +147,7 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
         }
     } while (!handle);
 
-    data          = malloc(sizeof(mrb_sftp_handle_t));
+    data          = mrb_malloc(mrb, sizeof(mrb_sftp_handle_t));
     data->session = mrb_ptr(session);
     data->handle  = handle;
 
@@ -237,7 +236,7 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
         }
     }
 
-    mem = malloc(mem_size * sizeof(char));
+    mem = mrb_malloc(mrb, mem_size * sizeof(char));
 
   read:
 
@@ -246,7 +245,7 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
     };
 
     if (rc <= 0) {
-        free(mem);
+        mrb_free(mrb, mem);
         mrb_iv_set(mrb, self, SYM_EOF, mrb_true_value());
         mrb_iv_remove(mrb, self, SYM_BUF);
         res = buf;
@@ -263,7 +262,7 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
         goto read;
 
     if (!sep) {
-        free(mem);
+        mrb_free(mrb, mem);
         mrb_iv_remove(mrb, self, SYM_BUF);
         res = buf;
         goto chomp;
@@ -272,7 +271,7 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
     if ((pos = mrb_str_index(mrb, buf, sep, sep_len, 0)) == -1)
         goto read;
 
-    free(mem);
+    mrb_free(mrb, mem);
 
   hit:
 

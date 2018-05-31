@@ -27,7 +27,6 @@
 #include "mruby/variable.h"
 #include "mruby/ext/sftp.h"
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <libssh2_sftp.h>
 
@@ -58,7 +57,7 @@ mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
         mrb_raise(mrb, E_RUNTIME_ERROR, "Cannot open the path specified.");
     }
 
-    mem = malloc(mem_size * sizeof(char));
+    mem = mrb_malloc(mrb, mem_size * sizeof(char));
 
   read:
 
@@ -74,7 +73,7 @@ mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
 
   done:
 
-    free(mem);
+    mrb_free(mrb, mem);
     fclose(file);
     mrb_iv_set(mrb, self, SYM_EOF, mrb_true_value());
 
@@ -104,7 +103,7 @@ mrb_sftp_f_upload (mrb_state *mrb, mrb_value self)
         mrb_raise(mrb, E_RUNTIME_ERROR, "Cannot open the path specified.");
     }
 
-    mem = malloc(mem_size * sizeof(char));
+    mem = mrb_malloc(mrb, mem_size * sizeof(char));
 
   read:
 
@@ -120,7 +119,7 @@ mrb_sftp_f_upload (mrb_state *mrb, mrb_value self)
 
   done:
 
-    free(mem);
+    mrb_free(mrb, mem);
     fclose(file);
     mrb_iv_set(mrb, self, SYM_EOF, mrb_true_value());
 
