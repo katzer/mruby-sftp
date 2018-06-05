@@ -89,7 +89,7 @@ mrb_sftp_stat (mrb_state *mrb, mrb_value self, LIBSSH2_SFTP_ATTRIBUTES *attrs, i
 
     if (mrb_string_p(obj)) {
         while ((ret = libssh2_sftp_stat_ex(sftp, RSTRING_PTR(obj), RSTRING_LEN(obj), type, attrs)) == LIBSSH2_ERROR_EAGAIN);
-        return ret;
+        goto done;
     }
 
     handle = mrb_sftp_handle(mrb, obj);
@@ -99,6 +99,12 @@ mrb_sftp_stat (mrb_state *mrb, mrb_value self, LIBSSH2_SFTP_ATTRIBUTES *attrs, i
     }
 
     while ((ret = libssh2_sftp_fstat(handle, attrs)) == LIBSSH2_ERROR_EAGAIN);
+
+  done:
+
+    if (ret == LIBSSH2_ERROR_SFTP_PROTOCOL) {
+        ret = libssh2_sftp_last_error(sftp);
+    }
 
     return ret;
 }
