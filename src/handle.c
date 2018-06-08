@@ -49,6 +49,7 @@ static mrb_sym SYM_EOF;
 static mrb_sym SYM_BUF;
 static mrb_sym SYM_CUR;
 static mrb_sym SYM_SET;
+static mrb_sym SYM_END;
 static mrb_sym SYM_TYPE;
 static mrb_sym SYM_PATH;
 static mrb_value KEY_CHOMP;
@@ -359,13 +360,18 @@ mrb_sftp_f_seek (mrb_state *mrb, mrb_value self)
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle_bang(mrb, self);
     mrb_int offset              = 0;
     mrb_sym whence              = SYM_SET;
+    LIBSSH2_SFTP_ATTRIBUTES attrs;
 
     mrb_get_args(mrb, "i|n", &offset, &whence);
 
-    if (SYM_CUR == whence) {
+    if (whence == SYM_CUR) {
         offset += libssh2_sftp_tell64(handle);
     } else
-    if (SYM_SET != whence) {
+    if (whence == SYM_END) {
+        while (libssh2_sftp_fstat(handle, &attrs) == LIBSSH2_ERROR_EAGAIN);
+        offset += attrs.filesize;
+    } else
+    if (whence != SYM_SET) {
         mrb_raise(mrb, E_RUNTIME_ERROR, "Unknown seek option for SFTP handle.");
     }
 
@@ -451,6 +457,7 @@ mrb_mruby_sftp_handle_init (mrb_state *mrb)
 
     SYM_CUR     = mrb_intern_static(mrb, "CUR", 3);
     SYM_SET     = mrb_intern_static(mrb, "SET", 3);
+    SYM_END     = mrb_intern_static(mrb, "END", 3);
     SYM_EOF     = mrb_intern_static(mrb, "eof", 3);
     SYM_BUF     = mrb_intern_static(mrb, "buf", 3);
     SYM_TYPE    = mrb_intern_static(mrb, "type", 4);
