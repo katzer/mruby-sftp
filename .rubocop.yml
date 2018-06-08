@@ -29,5 +29,8 @@ Style/ParallelAssignment:
 Style/RescueModifier:
   Enabled: false
 
+Style/NumericPredicate:
+  EnforcedStyle: comparison
+
 Documentation:
   Enabled: false
