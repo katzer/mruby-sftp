@@ -95,9 +95,18 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |ftp|
 
     file.seek(1)
     assert_equal 1, file.pos
+  end
+
+  assert 'SFTP::Handle#pos=' do
+    assert_raise(RuntimeError) { dummy.pos = 1 }
+
+    file.open_file
 
     file.pos = 2
     assert_equal 2, file.pos
+
+    file.pos = -1
+    assert_equal file.stat.size - 1, file.pos
   end
 
   assert 'SFTP::Handle#rewind' do

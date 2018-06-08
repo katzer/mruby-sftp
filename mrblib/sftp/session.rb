@@ -109,7 +109,7 @@ module SFTP
     # @return [ String ]
     def read(path, size = nil, offset = 0, opts = {})
       file.open(path, opts[:mode] || 'r') do |io|
-        io.pos = offset if offset
+        io.pos = offset if offset != 0
         io.gets(size)
       end
     end
@@ -129,7 +129,7 @@ module SFTP
       mode = (offset || 0) > 0 ? 'r+' : (opts[:mode] || 'w')
 
       file.open(path, mode, opts[:perm] || 0o644) do |io|
-        io.pos = offset if offset
+        io.pos = offset if offset != 0
         io.write(str)
       end
     end

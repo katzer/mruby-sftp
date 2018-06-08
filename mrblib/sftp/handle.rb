@@ -76,7 +76,7 @@ module SFTP
     #
     # @return [ Void ]
     def pos=(pos)
-      seek(pos)
+      seek(pos, pos < 0 ? :END : :SET)
     end
 
     # Positions to the beginning of input, resetting pos to zero.
