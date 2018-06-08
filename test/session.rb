@@ -200,10 +200,11 @@ SSH.start('test.rebex.net', 'demo', password: 'password', block: false) do |ssh|
     size    = sftp.stat('readme.txt').size
 
     assert_equal size, content.size
-    assert_equal content[0, 5], sftp.read('readme.txt', 5)
-    assert_equal content[0, 5], sftp.read('readme.txt', 5, 0)
-    assert_equal content[1, 5], sftp.read('readme.txt', 5, 1)
-    assert_equal content[1, 5], sftp.read('readme.txt', 5, 1, mode: 'r')
+    assert_equal content[0, 5],  sftp.read('readme.txt', 5)
+    assert_equal content[0, 5],  sftp.read('readme.txt', 5, 0)
+    assert_equal content[1, 5],  sftp.read('readme.txt', 5, 1)
+    assert_equal content[-5, 5], sftp.read('readme.txt', 5, -5)
+    assert_equal content[1, 5],  sftp.read('readme.txt', 5, 1, mode: 'r')
   end
 
   assert 'SFTP#close' do
