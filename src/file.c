@@ -37,7 +37,7 @@ static mrb_sym SYM_SESSION;
 static mrb_value
 mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
 {
-    size_t mem_size = 3200000;
+    size_t mem_size = 30000;
     const char* path;
     mrb_int len;
     FILE *file;
