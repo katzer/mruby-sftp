@@ -216,7 +216,7 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
         mem_size_given = TRUE;
     } else
     if (arg_given && mrb_nil_p(arg)) {
-        mem_size  = 3200000;
+        mem_size  = 30000;
     } else
     if (!arg_given) {
         sep     = "\n";
@@ -259,7 +259,7 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
         buf = mrb_str_new(mrb, mem, rc);
     }
 
-    if (!sep && !mem_size_given && rc > 0)
+    if (!sep && rc > 0 && (!mem_size_given || RSTRING_LEN(buf) < mem_size))
         goto read;
 
     if (!sep) {
