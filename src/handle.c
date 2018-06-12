@@ -216,7 +216,7 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
         mem_size_given = TRUE;
     } else
     if (arg_given && mrb_nil_p(arg)) {
-        mem_size  = 30000;
+        mem_size  = 3200000;
     } else
     if (!arg_given) {
         sep     = "\n";
