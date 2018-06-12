@@ -194,7 +194,7 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
     unsigned int mem_size = 256, sep_len = 0;
     int rc, pos, chomp = FALSE;
     const char *sep = NULL;
-    char *mem;
+    char *mem = NULL;
 
     mrb_get_args(mrb, "|o?H!", &arg, &arg_given, &opts);
 
@@ -246,7 +246,6 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
     };
 
     if (rc <= 0) {
-        mrb_free(mrb, mem);
         mrb_iv_set(mrb, self, SYM_EOF, mrb_true_value());
         mrb_iv_remove(mrb, self, SYM_BUF);
         res = buf;
@@ -263,7 +262,6 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
         goto read;
 
     if (!sep) {
-        mrb_free(mrb, mem);
         mrb_iv_remove(mrb, self, SYM_BUF);
         res = buf;
         goto chomp;
@@ -271,8 +269,6 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
 
     if ((pos = mrb_str_index(mrb, buf, sep, sep_len, 0)) == -1)
         goto read;
-
-    mrb_free(mrb, mem);
 
   hit:
 
@@ -283,6 +279,10 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
     mrb_iv_set(mrb, self, SYM_BUF, buf);
 
   chomp:
+
+    if (mem) {
+        mrb_free(mrb, mem);
+    }
 
     if (mrb_string_p(res) && RSTRING_LEN(res) == 0) {
         return mrb_nil_value();
