@@ -25,11 +25,7 @@ MRuby::Gem::Specification.new('mruby-sftp') do |spec|
   spec.authors = 'Sebastian Katzer'
   spec.summary = 'SFTP client for mruby'
 
-  spec.add_dependency      'mruby-ssh', mgem: 'mruby-ssh'
-  spec.add_test_dependency 'mruby-env', mgem: 'mruby-env'
+  spec.test_args = { 'TMP' => __dir__ } if build.test_enabled?
 
-  if build.test_enabled?
-    ENV['_TMP'] = File.join(dir, 'test/tmp')
-    FileUtils.mkdir_p(ENV['_TMP'])
-  end
+  spec.add_dependency 'mruby-ssh', mgem: 'mruby-ssh'
 end

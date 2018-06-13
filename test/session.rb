@@ -189,7 +189,7 @@ SSH.start('test.rebex.net', 'demo', password: 'password', block: false) do |ssh|
 
     assert_kind_of String, content
     assert_equal size, content.size
-    assert_equal size, sftp.download('readme.txt', "#{ENV['_TMP']}/readme.txt")
+    assert_equal size, sftp.download('readme.txt', "#{TEST_ARGS['TMP']}/readme.tmp")
   end
 
   assert 'SFTP::Session#read' do
