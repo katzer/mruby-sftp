@@ -375,6 +375,10 @@ mrb_sftp_f_seek (mrb_state *mrb, mrb_value self)
         mrb_raise(mrb, E_RUNTIME_ERROR, "Unknown seek option for SFTP handle.");
     }
 
+    if (offset < 0) {
+        offset = 0;
+    }
+
     libssh2_sftp_seek64(handle, offset);
 
     mrb_iv_remove(mrb, self, SYM_EOF);
