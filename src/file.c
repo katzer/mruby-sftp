@@ -28,6 +28,7 @@
 #include "mruby/ext/sftp.h"
 
 #include <stdio.h>
+#include <sys/stat.h>
 #include <libssh2_sftp.h>
 
 static mrb_sym SYM_EOF;
@@ -83,12 +84,12 @@ mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
 static mrb_value
 mrb_sftp_f_upload (mrb_state *mrb, mrb_value self)
 {
-    size_t mem_size = 30000;
+    struct stat st;
+    size_t mem_size;
     const char* path;
     mrb_int len;
     FILE *file;
-    char *mem;
-    size_t rc;
+    char*mem;
 
     mrb_value session           = mrb_attr_get(mrb, self, SYM_SESSION);
     mrb_ssh_t *ssh              = mrb_sftp_ssh_session(session);
@@ -103,27 +104,30 @@ mrb_sftp_f_upload (mrb_state *mrb, mrb_value self)
         mrb_raise(mrb, E_RUNTIME_ERROR, "Cannot open the path specified.");
     }
 
-    mem = mrb_malloc(mrb, mem_size * sizeof(char));
+    if (fstat(fileno(file), &st) != 0) {
+        mrb_raise(mrb, E_RUNTIME_ERROR, "Cannot determine file size.");
+    }
 
-  read:
+    mem_size = st.st_size;
 
-    rc = fread(mem, sizeof(char), mem_size, file);
+    if (mem_size <= 0) goto done;
 
-    if (rc <= 0) goto done;
+    mem = (char*) mrb_malloc(mrb, mem_size * sizeof(char));
 
-    while (libssh2_sftp_write(handle, mem, rc) == LIBSSH2_ERROR_EAGAIN) {
+    fread(mem, sizeof(char), mem_size, file);
+    fclose(file);
+
+    while (libssh2_sftp_write(handle, mem, mem_size) == LIBSSH2_ERROR_EAGAIN) {
         mrb_ssh_wait_socket(ssh);
     }
 
-    goto read;
+    mrb_free(mrb, mem);
 
   done:
 
-    mrb_free(mrb, mem);
-    fclose(file);
     mrb_iv_set(mrb, self, SYM_EOF, mrb_true_value());
 
-    return mrb_fixnum_value(libssh2_sftp_tell64(handle));
+    return mrb_fixnum_value(mem_size);
 }
 
 static mrb_value
