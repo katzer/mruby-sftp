@@ -71,7 +71,7 @@ static void
 mrb_sftp_raise_unless_connected (mrb_state *mrb, LIBSSH2_SFTP *sftp)
 {
     if (sftp && mrb_ssh_initialized()) return;
-    mrb_raise(mrb, E_RUNTIME_ERROR, "SFTP session not connected.");
+    mrb_raise(mrb, E_SFTP_NOT_CONNECTED_ERROR, "SFTP session not connected.");
 }
 
 static int
@@ -95,7 +95,7 @@ mrb_sftp_stat (mrb_state *mrb, mrb_value self, LIBSSH2_SFTP_ATTRIBUTES *attrs, i
     handle = mrb_sftp_handle(mrb, obj);
 
     if (!handle) {
-        mrb_raise(mrb, E_RUNTIME_ERROR, "SFTP handle not opened.");
+        mrb_raise(mrb, E_SFTP_HANDLE_CLOSED_ERROR, "SFTP handle not opened.");
     }
 
     while ((ret = libssh2_sftp_fstat(handle, attrs)) == LIBSSH2_ERROR_EAGAIN);
@@ -116,7 +116,6 @@ mrb_sftp_f_connect (mrb_state *mrb, mrb_value self)
     mrb_sftp_t *data;
     mrb_ssh_t *ssh;
     mrb_value session;
-    char *err;
 
     if (DATA_PTR(self)) return mrb_nil_value();
 
@@ -124,11 +123,11 @@ mrb_sftp_f_connect (mrb_state *mrb, mrb_value self)
     ssh     = DATA_PTR(session);
 
     if (!(ssh && mrb_ssh_initialized())) {
-        mrb_raise(mrb, E_RUNTIME_ERROR, "SSH session not connected.");
+        mrb_raise(mrb, E_SSH_NOT_CONNECTED_ERROR, "SSH session not connected.");
     }
 
     if (!libssh2_userauth_authenticated(ssh->session)) {
-        mrb_raise(mrb, E_RUNTIME_ERROR, "SSH session not authenticated.");
+        mrb_raise(mrb, E_SSH_NOT_AUTH_ERROR, "SSH session not authenticated.");
     }
 
     do {
@@ -139,8 +138,7 @@ mrb_sftp_f_connect (mrb_state *mrb, mrb_value self)
         if (libssh2_session_last_errno(ssh->session) == LIBSSH2_ERROR_EAGAIN) {
             mrb_ssh_wait_socket(ssh);
         } else {
-            libssh2_session_last_error(ssh->session, &err, NULL, 0);
-            mrb_raise(mrb, E_RUNTIME_ERROR, err);
+            mrb_ssh_raise_last_error(mrb, ssh);
         }
     } while (!sftp);
 
@@ -234,7 +232,11 @@ mrb_sftp_f_setstat (mrb_state *mrb, mrb_value self)
 
     while ((ret = libssh2_sftp_stat_ex(sftp, path, path_len, LIBSSH2_SFTP_SETSTAT, &attrs)) == LIBSSH2_ERROR_EAGAIN);
 
-    return mrb_bool_value(ret == 0 ? TRUE : FALSE);
+    if (ret != 0) {
+        mrb_sftp_raise_last_error(mrb, sftp, "Failed to set the stats as specified.");
+    }
+
+    return mrb_nil_value();
 }
 
 static mrb_value
@@ -252,7 +254,11 @@ mrb_sftp_f_rename (mrb_state *mrb, mrb_value self)
 
     while ((ret = libssh2_sftp_rename_ex(sftp, source, source_len, dest, dest_len, flags)) == LIBSSH2_ERROR_EAGAIN);
 
-    return mrb_bool_value(ret == 0 ? TRUE : FALSE);
+    if (ret != 0) {
+        mrb_sftp_raise_last_error(mrb, sftp, "Failed to rename the file or dir as specified.");
+    }
+
+    return mrb_nil_value();
 }
 
 static mrb_value
@@ -270,7 +276,11 @@ mrb_sftp_f_symlink (mrb_state *mrb, mrb_value self)
 
     while ((ret = libssh2_sftp_symlink_ex(sftp, path, path_len, target, target_len, LIBSSH2_SFTP_SYMLINK)) == LIBSSH2_ERROR_EAGAIN);
 
-    return mrb_bool_value(ret == 0 ? TRUE : FALSE);
+    if (ret != 0) {
+        mrb_sftp_raise_last_error(mrb, sftp, "Failed to create the symlink specified.");
+    }
+
+    return mrb_nil_value();
 }
 
 static mrb_value
@@ -287,7 +297,11 @@ mrb_sftp_f_rmdir (mrb_state *mrb, mrb_value self)
 
     while ((ret = libssh2_sftp_rmdir_ex(sftp, path, path_len)) == LIBSSH2_ERROR_EAGAIN);
 
-    return mrb_bool_value(ret == 0 ? TRUE : FALSE);
+    if (ret != 0) {
+        mrb_sftp_raise_last_error(mrb, sftp, "Failed to move the dir specified.");
+    }
+
+    return mrb_nil_value();
 }
 
 static mrb_value
@@ -304,7 +318,11 @@ mrb_sftp_f_mkdir (mrb_state *mrb, mrb_value self)
 
     while ((ret = libssh2_sftp_mkdir_ex(sftp, path, path_len, mode)) == LIBSSH2_ERROR_EAGAIN);
 
-    return mrb_bool_value(ret == 0 ? TRUE : FALSE);
+    if (ret != 0) {
+        mrb_sftp_raise_last_error(mrb, sftp, "Failed to create the dir specified.");
+    }
+
+    return mrb_nil_value();
 }
 
 static mrb_value
@@ -321,7 +339,11 @@ mrb_sftp_f_delete (mrb_state *mrb, mrb_value self)
 
     while ((ret = libssh2_sftp_unlink_ex(sftp, path, path_len)) == LIBSSH2_ERROR_EAGAIN);
 
-    return mrb_bool_value(ret == 0 ? TRUE : FALSE);
+    if (ret != 0) {
+        mrb_sftp_raise_last_error(mrb, sftp, "Failed to delete the file specified.");
+    }
+
+    return mrb_nil_value();
 }
 
 static mrb_value

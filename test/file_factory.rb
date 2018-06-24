@@ -33,7 +33,7 @@ end
 
 SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
   assert 'SFTP::FileFactory#directory?' do
-    assert_raise(RuntimeError) { dummy.file.directory? '/pub' }
+    assert_raise(SFTP::NotConnected) { dummy.file.directory? '/pub' }
     assert_raise(ArgumentError) { sftp.file.directory? }
     assert_true  sftp.file.directory? '/pub'
     assert_false sftp.file.directory? 'readme.txt'
@@ -41,8 +41,9 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
   end
 
   assert 'SFTP::FileFactory#open' do
-    assert_raise(RuntimeError) { dummy.file.open 'readme.txt' }
+    assert_raise(SFTP::NotConnected) { dummy.file.open 'readme.txt' }
     assert_raise(ArgumentError) { sftp.file.open }
+    assert_raise(SFTP::FileError) { sftp.file.open 'readme txt' }
 
     io = sftp.file.open('readme.txt')
 

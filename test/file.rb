@@ -51,7 +51,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
   end
 
   assert 'SFTP::File#getc' do
-    assert_raise(RuntimeError) { dummy.getc }
+    assert_raise(SFTP::HandleNotOpened) { dummy.getc }
     assert_raise(ArgumentError) { dummy.getc(2) }
 
     file.open
@@ -61,7 +61,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
   end
 
   assert 'SFTP::File#read' do
-    assert_raise(RuntimeError) { dummy.read }
+    assert_raise(SFTP::HandleNotOpened) { dummy.read }
     assert_raise(TypeError) { dummy.read("\n") }
     assert_raise(TypeError) { file.read(1.5) }
 
@@ -79,7 +79,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
   end
 
   assert 'SFTP::File#readline' do
-    assert_raise(RuntimeError) { dummy.readline }
+    assert_raise(SFTP::HandleNotOpened) { dummy.readline }
     assert_raise(TypeError) { dummy.readline(1) }
     assert_raise(TypeError) { dummy.readline(nil) }
 
@@ -92,11 +92,11 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
 
     file.read
     assert_true file.eof?
-    assert_raise(RuntimeError) { file.readline }
+    assert_raise(EOFError) { file.readline }
   end
 
   assert 'SFTP::File#eof?' do
-    assert_raise(RuntimeError) { dummy.eof? }
+    assert_raise(SFTP::HandleNotOpened) { dummy.eof? }
 
     file.open
 
@@ -111,7 +111,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
   end
 
   assert 'SFTP::File#readlines' do
-    assert_raise(RuntimeError) { dummy.readlines }
+    assert_raise(SFTP::HandleNotOpened) { dummy.readlines }
     assert_raise(TypeError) { file.readlines(1.5) }
 
     file.open
@@ -134,10 +134,15 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
 
   assert 'SFTP::File#sync' do
     file.close
-    assert_raise(RuntimeError) { file.sync }
-    file.open
-    assert_false file.sync
-    assert_equal SFTP::UNSUPPORTED, sftp.last_errno
-    file.close
+    assert_raise(SFTP::HandleNotOpened) { file.sync }
+
+    begin
+      file.open
+      file.sync
+    rescue SFTP::Unsupported => e
+      skip(e)
+    end
   end
+
+  file.close
 end

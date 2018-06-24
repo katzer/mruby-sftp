@@ -40,8 +40,21 @@ struct mrb_sftp
 
 typedef struct mrb_sftp mrb_sftp_t;
 
+#define E_SFTP_ERROR                  (mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "Exception"))
+#define E_SFTP_PERM_ERROR             (mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "PermissionError"))
+#define E_SFTP_HANDLE_CLOSED_ERROR    (mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "HandleNotOpened"))
+#define E_SFTP_UNSUPPORTED_ERROR      (mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "Unsupported"))
+#define E_SFTP_NOT_CONNECTED_ERROR    (mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "NotConnected"))
+#define E_SFTP_CONNECTION_LOST_ERROR  (mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "ConnectionLost"))
+#define E_SFTP_FILE_ERROR             (mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "FileError"))
+#define E_SFTP_DIR_ERROR              (mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "DirError"))
+#define E_SFTP_PATH_ERROR             (mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "PathError"))
+#define E_SFTP_NAME_ERROR             (mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "NameError"))
+
 LIBSSH2_SFTP* mrb_sftp_session (mrb_value self);
 mrb_ssh_t* mrb_sftp_ssh_session (mrb_value self);
+void mrb_sftp_raise_last_error (mrb_state *mrb, LIBSSH2_SFTP *sftp, const char* msg);
+void mrb_sftp_raise (mrb_state *mrb, int err, const char* msg);
 
 #ifdef __cplusplus
 }

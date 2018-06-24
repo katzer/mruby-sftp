@@ -36,9 +36,9 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
     called = false
 
     assert_raise(ArgumentError) { sftp.dir.foreach }
-    assert_raise(RuntimeError) { sftp.dir.foreach('i am bad') {} }
-    assert_raise(RuntimeError) { sftp.dir.foreach('i/am/bad') {} }
-    assert_raise(RuntimeError) { sftp.dir.foreach('readme.txt') {} }
+    assert_raise(SFTP::FileError) { sftp.dir.foreach('i am bad') {} }
+    assert_raise(SFTP::FileError) { sftp.dir.foreach('i/am/bad') {} }
+    assert_raise(SFTP::FileError) { sftp.dir.foreach('readme.txt') {} }
 
     sftp.dir.foreach('/') do |entry|
       called = true
@@ -54,9 +54,9 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
 
   assert 'SFTP::Dir#entries' do
     assert_raise(ArgumentError) { sftp.dir.entries }
-    assert_raise(RuntimeError) { sftp.dir.entries 'i am bad' }
-    assert_raise(RuntimeError) { sftp.dir.entries 'i/am/bad' }
-    assert_raise(RuntimeError) { sftp.dir.entries 'readme.txt' }
+    assert_raise(SFTP::FileError) { sftp.dir.entries 'i am bad' }
+    assert_raise(SFTP::FileError) { sftp.dir.entries 'i/am/bad' }
+    assert_raise(SFTP::FileError) { sftp.dir.entries 'readme.txt' }
     assert_equal 5, sftp.dir.entries('/').size
     assert_include sftp.dir.entries('/').map! { |e| e.name }, 'readme.txt'
   end

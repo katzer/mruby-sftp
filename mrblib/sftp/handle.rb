@@ -51,7 +51,7 @@ module SFTP
       case type = @session.stat(path).ftype
       when :directory then open_dir
       when :regular   then open_file(flags, mode)
-      else raise "Don't know how to open #{type}"
+      else raise SFTP::Exception, "Don't know how to open #{type}"
       end
     end
 

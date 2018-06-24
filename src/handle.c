@@ -84,7 +84,7 @@ static void
 mrb_sftp_raise_unless_opened (mrb_state *mrb, LIBSSH2_SFTP_HANDLE *handle)
 {
     if (handle && mrb_ssh_initialized()) return;
-    mrb_raise(mrb, E_RUNTIME_ERROR, "SFTP handle not opened.");
+    mrb_raise(mrb, E_SFTP_HANDLE_CLOSED_ERROR, "SFTP handle not opened.");
 }
 
 LIBSSH2_SFTP_HANDLE *
@@ -133,7 +133,7 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
     path    = mrb_sftp_path(mrb, self, &len);
 
     if (!sftp) {
-        mrb_raise(mrb, E_RUNTIME_ERROR, "SFTP session not connected.");
+        mrb_raise(mrb, E_SFTP_NOT_CONNECTED_ERROR, "SFTP session not connected.");
     }
 
     do {
@@ -144,7 +144,7 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
         if (libssh2_session_last_errno(ssh->session) == LIBSSH2_ERROR_EAGAIN) {
             mrb_ssh_wait_socket(ssh);
         } else {
-            mrb_raise(mrb, E_RUNTIME_ERROR, "Unable to open the remote path.");
+            mrb_sftp_raise_last_error(mrb, sftp, "Unable to open the remote path.");
         }
     } while (!handle);
 
@@ -330,7 +330,7 @@ mrb_sftp_f_open_file (mrb_state *mrb, mrb_value self) {
     if (strncmp(flag, "a+", flag_len) == 0) {
         flags = LIBSSH2_FXF_APPEND | LIBSSH2_FXF_CREAT | LIBSSH2_FXF_READ | LIBSSH2_FXF_WRITE;
     } else {
-        mrb_raise(mrb, E_RUNTIME_ERROR, "Unsupported flags.");
+        mrb_raise(mrb, E_SFTP_ERROR, "Unsupported flags.");
     }
 
     mrb_sftp_open(mrb, self, flags, mode, LIBSSH2_SFTP_OPENFILE);
@@ -372,7 +372,7 @@ mrb_sftp_f_seek (mrb_state *mrb, mrb_value self)
         offset += attrs.filesize;
     } else
     if (whence != SYM_SET) {
-        mrb_raise(mrb, E_RUNTIME_ERROR, "Unknown seek option for SFTP handle.");
+        mrb_raise(mrb, E_SFTP_ERROR, "Unknown seek option for SFTP handle.");
     }
 
     if (offset < 0) {
@@ -412,16 +412,23 @@ static mrb_value
 mrb_sftp_f_sync (mrb_state *mrb, mrb_value self)
 {
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle_bang(mrb, self);
+    LIBSSH2_SFTP *sftp;
+    mrb_value session;
     int ret;
 
     while ((ret = libssh2_sftp_fsync(handle)) == LIBSSH2_ERROR_EAGAIN);
 
-    if (ret == 0) {
-        mrb_iv_remove(mrb, self, SYM_EOF);
-        mrb_iv_remove(mrb, self, SYM_BUF);
+    if (ret != 0) {
+        session = mrb_attr_get(mrb, self, SYM_SESSION);
+        sftp    = mrb_sftp_session(session);
+
+        mrb_sftp_raise_last_error(mrb, sftp, "Cannot sync the SFTP handle.");
     }
 
-    return mrb_bool_value(ret == 0 ? TRUE : FALSE);
+    mrb_iv_remove(mrb, self, SYM_EOF);
+    mrb_iv_remove(mrb, self, SYM_BUF);
+
+    return mrb_nil_value();
 }
 
 static mrb_value

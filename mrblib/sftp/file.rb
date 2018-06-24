@@ -82,7 +82,7 @@ module SFTP
     def readline(sep = "\n", opts = nil)
       raise TypeError unless sep.is_a?(String) || sep.is_a?(Hash)
       line = gets(sep, opts)
-      raise RuntimeError unless line
+      raise EOFError unless line
       line
     end
 

@@ -39,7 +39,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |ftp|
 
   assert 'SFTP::Handle#open_dir' do
     assert_false dummy.open?
-    assert_raise(RuntimeError) { dummy.open_dir }
+    assert_raise(SFTP::NotConnected) { dummy.open_dir }
     assert_true dummy.closed?
 
     assert_false dir.open?
@@ -49,18 +49,18 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |ftp|
 
   assert 'SFTP::Handle#open_file' do
     assert_false dummy.open?
-    assert_raise(RuntimeError) { dummy.open_file }
+    assert_raise(SFTP::NotConnected) { dummy.open_file }
     assert_true dummy.closed?
 
     assert_false file.open?
-    assert_raise(RuntimeError) { file.open_file 'unknown flag' }
+    assert_raise(SFTP::Exception) { file.open_file 'unknown flag' }
     assert_false file.open?
     assert_nothing_raised { file.open_file 'r' }
     assert_false file.closed?
   end
 
   assert 'SFTP::Handle#open' do
-    assert_raise(RuntimeError) { dummy.open }
+    assert_raise(SFTP::NotConnected) { dummy.open }
     assert_nothing_raised { file.open }
     assert_nothing_raised { dir.open }
     assert_false dummy.open?
@@ -69,11 +69,11 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |ftp|
   end
 
   assert 'SFTP::Handle#seek' do
-    assert_raise(RuntimeError) { dummy.seek }
+    assert_raise(SFTP::HandleNotOpened) { dummy.seek }
 
     file.open_file
 
-    assert_raise(RuntimeError) { file.seek(1, :OTHER) }
+    assert_raise(SFTP::Exception) { file.seek(1, :OTHER) }
 
     assert_equal 0,   file.seek(0)
     assert_equal 100, file.seek(100, :SET)
@@ -89,7 +89,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |ftp|
   end
 
   assert 'SFTP::Handle#pos' do
-    assert_raise(RuntimeError) { dummy.pos }
+    assert_raise(SFTP::HandleNotOpened) { dummy.pos }
 
     file.open_file
 
@@ -98,7 +98,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |ftp|
   end
 
   assert 'SFTP::Handle#pos=' do
-    assert_raise(RuntimeError) { dummy.pos = 1 }
+    assert_raise(SFTP::HandleNotOpened) { dummy.pos = 1 }
 
     file.open_file
 
@@ -110,7 +110,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |ftp|
   end
 
   assert 'SFTP::Handle#rewind' do
-    assert_raise(RuntimeError) { dummy.rewind }
+    assert_raise(SFTP::HandleNotOpened) { dummy.rewind }
 
     file.open_file
     file.seek(1)
@@ -119,7 +119,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |ftp|
   end
 
   assert 'SFTP::Handle#gets' do
-    assert_raise(RuntimeError) { dummy.gets }
+    assert_raise(SFTP::HandleNotOpened) { dummy.gets }
 
     file.open_file
     file.rewind
@@ -144,7 +144,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |ftp|
   end
 
   assert 'SFTP::Handle#stat' do
-    assert_raise(RuntimeError) { dummy.stat }
+    assert_raise(SFTP::NotConnected) { dummy.stat }
     assert_kind_of SFTP::Stat, file.stat
     assert_true file.stat.file?
   end

@@ -27,8 +27,54 @@
 #include "stat.h"
 
 #include "mruby.h"
+#include "mruby/error.h"
+#include "mruby/variable.h"
+#include "mruby/ext/sftp.h"
 
 #include <libssh2_sftp.h>
+
+void
+mrb_sftp_raise_last_error (mrb_state *mrb, LIBSSH2_SFTP *sftp, const char* msg)
+{
+    int err = libssh2_sftp_last_error(sftp);
+
+    mrb_sftp_raise(mrb, err, msg);
+}
+
+void
+mrb_sftp_raise (mrb_state *mrb, int err, const char* msg)
+{
+    struct RClass *c;
+    mrb_value exc;
+
+    switch (err) {
+    case LIBSSH2_FX_OK:
+        return;
+    case LIBSSH2_FX_PERMISSION_DENIED:
+        c = E_SFTP_PERM_ERROR; break;
+    case LIBSSH2_FX_NO_CONNECTION:
+        c = E_SFTP_NOT_CONNECTED_ERROR; break;
+    case LIBSSH2_FX_CONNECTION_LOST:
+        c = E_SFTP_CONNECTION_LOST_ERROR; break;
+    case LIBSSH2_FX_OP_UNSUPPORTED:
+        c = E_SFTP_UNSUPPORTED_ERROR; break;
+    case LIBSSH2_FX_NO_SUCH_FILE:
+        c = E_SFTP_FILE_ERROR; break;
+    case LIBSSH2_FX_NO_SUCH_PATH:
+        c = E_SFTP_PATH_ERROR; break;
+    case LIBSSH2_FX_NOT_A_DIRECTORY:
+        c = E_SFTP_DIR_ERROR; break;
+    case LIBSSH2_FX_INVALID_FILENAME:
+        c = E_SFTP_NAME_ERROR; break;
+    default:
+        c = E_SFTP_ERROR; break;
+    }
+
+    exc = mrb_exc_new_str(mrb, c, mrb_str_new_cstr(mrb, msg));
+    mrb_iv_set(mrb, exc, mrb_intern_static(mrb, "@errno", 6), mrb_fixnum_value(err));
+
+    mrb_exc_raise(mrb, exc);
+}
 
 void
 mrb_mruby_sftp_gem_init (mrb_state *mrb)
@@ -38,23 +84,6 @@ mrb_mruby_sftp_gem_init (mrb_state *mrb)
     mrb_define_const(mrb, ftp, "RENAME_OVERWRITE", mrb_fixnum_value(LIBSSH2_SFTP_RENAME_OVERWRITE));
     mrb_define_const(mrb, ftp, "RENAME_ATOMIC",    mrb_fixnum_value(LIBSSH2_SFTP_RENAME_ATOMIC));
     mrb_define_const(mrb, ftp, "RENAME_NATIVE",    mrb_fixnum_value(LIBSSH2_SFTP_RENAME_NATIVE));
-
-    mrb_define_const(mrb, ftp, "NO_SUCH_FILE",   mrb_fixnum_value(LIBSSH2_FX_NO_SUCH_FILE));
-    mrb_define_const(mrb, ftp, "NO_SUCH_PATH",   mrb_fixnum_value(LIBSSH2_FX_NO_SUCH_PATH));
-    mrb_define_const(mrb, ftp, "PERMISSION_DENIED", mrb_fixnum_value(LIBSSH2_FX_PERMISSION_DENIED));
-    mrb_define_const(mrb, ftp, "NO_CONNECTION",  mrb_fixnum_value(LIBSSH2_FX_NO_CONNECTION));
-    mrb_define_const(mrb, ftp, "CONNECTION_LOST",mrb_fixnum_value(LIBSSH2_FX_CONNECTION_LOST));
-    mrb_define_const(mrb, ftp, "UNSUPPORTED",    mrb_fixnum_value(LIBSSH2_FX_OP_UNSUPPORTED));
-    mrb_define_const(mrb, ftp, "INVALID_HANDLE", mrb_fixnum_value(LIBSSH2_FX_INVALID_HANDLE));
-    mrb_define_const(mrb, ftp, "FILE_EXIST",     mrb_fixnum_value(LIBSSH2_FX_FILE_ALREADY_EXISTS));
-    mrb_define_const(mrb, ftp, "WRITE_PROTECT",  mrb_fixnum_value(LIBSSH2_FX_WRITE_PROTECT));
-    mrb_define_const(mrb, ftp, "OUT_OF_SPACE",   mrb_fixnum_value(LIBSSH2_FX_NO_SPACE_ON_FILESYSTEM));
-    mrb_define_const(mrb, ftp, "DIR_NOT_EMPTY",  mrb_fixnum_value(LIBSSH2_FX_DIR_NOT_EMPTY));
-    mrb_define_const(mrb, ftp, "NOT_A_DIR",      mrb_fixnum_value(LIBSSH2_FX_NOT_A_DIRECTORY));
-    mrb_define_const(mrb, ftp, "INVALID_NAME",   mrb_fixnum_value(LIBSSH2_FX_INVALID_FILENAME));
-    mrb_define_const(mrb, ftp, "LINK_LOOP",      mrb_fixnum_value(LIBSSH2_FX_LINK_LOOP));
-    mrb_define_const(mrb, ftp, "NO_CONNECTION",  mrb_fixnum_value(LIBSSH2_FX_NO_CONNECTION));
-    mrb_define_const(mrb, ftp, "EOF",            mrb_fixnum_value(LIBSSH2_FX_EOF));
 
     mrb_mruby_sftp_session_init(mrb);
     mrb_mruby_sftp_handle_init(mrb);
