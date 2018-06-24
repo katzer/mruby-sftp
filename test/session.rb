@@ -79,7 +79,7 @@ assert 'SFTP#connect' do
   assert_false sftp.connected?
 end
 
-SSH.start('test.rebex.net', 'demo', password: 'password', block: false) do |ssh|
+SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
   sftp = ssh.sftp
 
   assert 'SSH#sftp' do
@@ -143,35 +143,49 @@ SSH.start('test.rebex.net', 'demo', password: 'password', block: false) do |ssh|
     end
   end
 
-  assert 'SFTP::Session#delete', 'readonly server :(' do
+  assert 'SFTP::Session#delete' do
     assert_raise(SFTP::NotConnected) { dummy.delete('readme.txt') }
     assert_raise(ArgumentError) { sftp.delete }
 
     begin
-      sftp.delete('readme.txt')
+      path = "#{TEST_ARGS['RAND']}.txt"
+
+      sftp.file.open(path, 'w+')
+      assert_true sftp.exist? path
+
+      sftp.delete(path)
+      assert_false sftp.exist? path
     rescue SFTP::PermissionError => e
       skip(e)
     end
   end
 
-  assert 'SFTP::Session#mkdir', 'readonly server :(' do
+  assert 'SFTP::Session#mkdir' do
     assert_raise(SFTP::NotConnected) { dummy.mkdir('/dir') }
     assert_raise(ArgumentError) { sftp.mkdir }
 
     begin
-      sftp.mkdir('/dir')
-      sftp.mkdir('/dir', 755)
+      path = TEST_ARGS['RAND']
+
+      sftp.mkdir(path)
+      assert_true sftp.stat(path).directory?
     rescue SFTP::PermissionError => e
       skip(e)
     end
   end
 
-  assert 'SFTP::Session#rmdir', 'readonly server :(' do
+  assert 'SFTP::Session#rmdir' do
     assert_raise(SFTP::NotConnected) { dummy.rmdir('/dir') }
     assert_raise(ArgumentError) { sftp.rmdir }
 
     begin
-      sftp.rmdir('/pub')
+      path = TEST_ARGS['RAND']
+
+      sftp.mkdir(path) unless sftp.exist? path
+      assert_true sftp.exist? path
+
+      sftp.rmdir(path)
+      assert_false sftp.exist? path
     rescue SFTP::PermissionError => e
       skip(e)
     end
@@ -183,20 +197,41 @@ SSH.start('test.rebex.net', 'demo', password: 'password', block: false) do |ssh|
     assert_raise(ArgumentError) { sftp.symlink('readme.txt') }
 
     begin
-      sftp.symlink('readme.txt', 'readme.link')
+      path = TEST_ARGS['RAND']
+      link = "#{path}.link"
+
+      sftp.file.open(path, 'w+')
+
+      assert_false sftp.exist? link
+      sftp.symlink(path, link)
+      assert_true sftp.exist? link
+      assert_true sftp.lstat(link).symlink?
+      assert_false sftp.fstat(link).symlink?
+
+      sftp.delete(path)
+      sftp.delete(link)
     rescue SFTP::Exception => e
       skip(e)
     end
   end
 
-  assert 'SFTP::Session#rename', 'readonly server :(' do
+  assert 'SFTP::Session#rename' do
     assert_raise(SFTP::NotConnected) { dummy.rename('readme.txt', 'link') }
     assert_raise(ArgumentError) { sftp.rename }
     assert_raise(ArgumentError) { sftp.rename('readme.txt') }
 
     begin
-      sftp.rename('readme.txt', 'readme.new')
-      sftp.rename('readme.txt', 'readme.new', SFTP::RENAME_ATOMIC)
+      path     = TEST_ARGS['RAND']
+      path_new = "#{path}.new"
+
+      sftp.file.open(path, 'w+')
+
+      assert_false sftp.exist? path_new
+      sftp.rename(path, path_new)
+      assert_true  sftp.exist? path_new
+      assert_false sftp.exist? path
+
+      sftp.delete(path_new)
     rescue SFTP::PermissionError => e
       skip(e)
     end

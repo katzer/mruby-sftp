@@ -298,7 +298,7 @@ mrb_sftp_f_rmdir (mrb_state *mrb, mrb_value self)
     while ((ret = libssh2_sftp_rmdir_ex(sftp, path, path_len)) == LIBSSH2_ERROR_EAGAIN);
 
     if (ret != 0) {
-        mrb_sftp_raise_last_error(mrb, sftp, "Failed to move the dir specified.");
+        mrb_sftp_raise_last_error(mrb, sftp, "Failed to remove the dir specified.");
     }
 
     return mrb_nil_value();

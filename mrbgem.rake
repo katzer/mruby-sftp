@@ -27,7 +27,7 @@ MRuby::Gem::Specification.new('mruby-sftp') do |spec|
 
   spec.mruby.cc.defines << 'HAVE_MRB_SFTP_H'
 
-  spec.test_args = { 'TMP' => __dir__ } if build.test_enabled?
+  spec.test_args = { 'TMP' => __dir__, 'RAND' => Time.now.to_i.to_s } if build.test_enabled?
 
   spec.add_dependency 'mruby-ssh', mgem: 'mruby-ssh'
 end
