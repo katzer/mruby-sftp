@@ -117,7 +117,7 @@ static void
 mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
 {
     const char *path;
-    int len;
+    int len, err;
 
     LIBSSH2_SFTP *sftp;
     mrb_ssh_t *ssh;
@@ -141,10 +141,19 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
 
         if (handle) break;
 
-        if (libssh2_session_last_errno(ssh->session) == LIBSSH2_ERROR_EAGAIN) {
+        err = libssh2_session_last_errno(ssh->session);
+
+        if (err == LIBSSH2_ERROR_EAGAIN)
+        {
             mrb_ssh_wait_socket(ssh);
-        } else {
+        }
+        else if (err == LIBSSH2_ERROR_SFTP_PROTOCOL)
+        {
             mrb_sftp_raise_last_error(mrb, sftp, "Unable to open the remote path.");
+        }
+        else if (err != LIBSSH2_ERROR_NONE)
+        {
+            mrb_ssh_raise_last_error(mrb, ssh);
         }
     } while (!handle);
 
