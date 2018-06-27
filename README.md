@@ -117,7 +117,11 @@ end
 
 See [file_factory.rb](mrblib/sftp/file_factory.rb), [file.rb](mrblib/sftp/file.rb), [file.c](src/file.c), [handle.rb](mrblib/sftp/handle.rb) and [handle.c](src/handle.c) for a complete list of available methods.
 
-### Compression
+### Build Flags
+
+The underlying [mruby-ssh][mruby_ssh] mgem offers a set of build flags that are useful for SFTP operations.
+
+#### Compression
 
 To speed up the download/upload of files its possible to enable compression. The feature is optional and disabled by default.
 
@@ -144,6 +148,29 @@ Now initiate a new SFTP session with `compress:true`:
 ```ruby
 SFTP.start('test.rebex.net', 'demo', password: 'password', compress: true)
 ``` 
+
+#### Optimize memory footprint
+
+Its possible to reduce the memory footprint by a few kB if the tool only depend on SFTP operations without the need of advanced SSH functionality.
+
+To make us of it add the line below to your `build_config.rb`:
+
+```ruby
+MRuby::Build.new do |conf|
+  # ... (snip) ...
+  conf.cc.defines << 'MRB_SSH_TINY'
+end
+```
+
+Or add this line to your aplication's `mrbgem.rake`:
+
+```ruby
+MRuby::Gem::Specification.new('your-mrbgem') do |spec|
+  # ... (snip) ...
+  spec.mruby.cc.defines << 'MRB_SSH_TINY'
+end
+```
+
 
 ## Development
 
