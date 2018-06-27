@@ -22,9 +22,6 @@
 
 module SFTP
   class File < Handle
-    # To be enumerable
-    include Enumerable
-
     # Opens a file on the remote server.
     #
     # @param [ String ] flags Determines how to open the file.
@@ -35,106 +32,7 @@ module SFTP
       open_file(flags, mode)
     end
 
-    # Calls the block once for each line in the named file on the remote server.
-    # Yields the line to the block.
-    #
-    # @param [ Hash ] opts The path of the remote directory.
-    # @param [ Proc ] proc Optional config settings { chomp: false }
-    #
-    # @return [ Void ]
-    def each_line(opts = { chomp: false })
-      return to_enum(:each, opts) unless block_given?
-      open || loop { break unless (line = gets(opts)) && yield(line) }
-    ensure
-      close
-    end
-
-    # To be enumerable
-    alias each each_line
-
-    # Reads a one-character string. Returns nil if called at end of file.
-    #
-    # @return [ String ]
-    def getc
-      read(1)
-    end
-
-    # Reads up to n bytes of data from the stream. Fewer bytes will be returned
-    # if EOF is encountered before the requested number of bytes could be read.
-    # Without an argument (or with a nil argument) all data to the end of the
-    # file will be read and returned.
-    #
-    # @param [ Int ] bytes Number of bytes to read.
-    #
-    # @return [ String ]
-    def read(bytes = nil)
-      raise TypeError if bytes && !bytes.is_a?(Integer)
-      gets(bytes)
-    end
-
-    # Same as gets, but raises EOFError if EOF is encountered before any data
-    # could be read.
-    #
-    # @param [ String ] sep  The string where to seperate from next line.
-    # @param [ Hash ]   opts Optional config settings { chomp: true }
-    #
-    # @return [ String ]
-    def readline(sep = "\n", opts = nil)
-      raise TypeError unless sep.is_a?(String) || sep.is_a?(Hash)
-      line = gets(sep, opts)
-      raise EOFError unless line
-      line
-    end
-
-    # Reads all of the lines and returns them in an array.
-    #
-    # @param [ Object] sep Lines are separated by the optional sep. If sep is
-    #                      nil, the rest of the stream is returned as a single
-    #                      record. If the first argument is an integer, or an
-    #                      optional second argument is given, the returning
-    #                      string would not be longer than the given value in
-    #                      bytes.
-    # @param [ Hash ] opts Optional config settings { chomp: true }
-    #
-    # @return [ Array<String> ]
-    def readlines(sep = "\n", opts = nil)
-      lines = []
-      loop { break unless (line = gets(sep, opts)) && lines << line }
-      lines
-    end
-
-    # Writes each argument to the stream. If +$+ is set, it will be written
-    # after all arguments have been written.
-    #
-    # @param [ String ] *items One or more strings to write.
-    #
-    # @return [ Void ]
-    def print(*items)
-      items.each { |item| write(item.to_s) }
-      write($\) && nil if $\
-    end
-
-    # Writes each argument to the stream, appending a newline to any item that
-    # does not already end in a newline.
-    #
-    # @param [ String ] *items One or more strings to write.
-    #
-    # @return [ Void ]
-    def puts(*items)
-      items.each do |item|
-        data = item.to_s
-        write(data[-1] == "\n" ? data : "#{data}\n")
-      end
-      nil
-    end
-
-    # Writes the string to the stream.
-    #
-    # @param [ String ] str The string to write.
-    #
-    # @return [ SFTP::File ] self
-    def <<(str)
-      write(str.to_s) && self
-    end
+    # To behaive like an IO object.
+    include SSH::IO
   end
 end
