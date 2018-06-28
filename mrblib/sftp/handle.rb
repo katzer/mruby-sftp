@@ -32,7 +32,7 @@ module SFTP
     # @return [ SFTP::Handle ]
     def initialize(session, path)
       @session = session
-      @path    = path.freeze
+      @path    = path.dup.freeze
     end
 
     # The path to the file or dir.
