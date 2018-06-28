@@ -33,7 +33,9 @@ assert 'SFTP::Session.new' do
   assert_false sftp.connected?
 end
 
-dummy = SFTP::Session.new(SSH::Session.new)
+dummy   = SFTP::Session.new(SSH::Session.new)
+tmp_dir = TEST_ARGS['TMP']
+rand    = TEST_ARGS['RAND']
 
 assert 'SFTP::Session#session' do
   assert_kind_of SSH::Session, dummy.session
@@ -131,7 +133,7 @@ SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
     assert_equal 2, sftp.last_errno
   end
 
-  assert 'SFTP::Session#setstat', 'readonly server :(' do
+  assert 'SFTP::Session#setstat' do
     assert_raise(SFTP::NotConnected) { dummy.setstat('readme.txt', uid: 1) }
     assert_raise(ArgumentError) { sftp.setstat }
     assert_raise(ArgumentError) { sftp.setstat 'readme.txt' }
@@ -148,7 +150,7 @@ SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
     assert_raise(ArgumentError) { sftp.delete }
 
     begin
-      path = "#{TEST_ARGS['RAND']}.txt"
+      path = "#{rand}.txt"
 
       sftp.file.open(path, 'w+')
       assert_true sftp.exist? path
@@ -165,7 +167,7 @@ SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
     assert_raise(ArgumentError) { sftp.mkdir }
 
     begin
-      path = TEST_ARGS['RAND']
+      path = rand
 
       sftp.mkdir(path)
       assert_true sftp.stat(path).directory?
@@ -179,7 +181,7 @@ SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
     assert_raise(ArgumentError) { sftp.rmdir }
 
     begin
-      path = TEST_ARGS['RAND']
+      path = rand
 
       sftp.mkdir(path) unless sftp.exist? path
       assert_true sftp.exist? path
@@ -197,7 +199,7 @@ SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
     assert_raise(ArgumentError) { sftp.symlink('readme.txt') }
 
     begin
-      path = TEST_ARGS['RAND']
+      path = rand
       link = "#{path}.link"
 
       sftp.file.open(path, 'w+')
@@ -221,7 +223,7 @@ SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
     assert_raise(ArgumentError) { sftp.rename('readme.txt') }
 
     begin
-      path     = TEST_ARGS['RAND']
+      path     = rand
       path_new = "#{path}.new"
 
       sftp.file.open(path, 'w+')
@@ -248,7 +250,7 @@ SSH.start('test.rebex.net', 'demo', password: 'password') do |ssh|
 
     assert_kind_of String, content
     assert_equal size, content.size
-    assert_equal size, sftp.download('readme.txt', "#{TEST_ARGS['TMP']}/readme.tmp")
+    assert_equal size, sftp.download('readme.txt', "#{tmp_dir}/readme.tmp")
   end
 
   assert 'SFTP::Session#read' do
