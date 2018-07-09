@@ -50,6 +50,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
     assert_kind_of SFTP::File, io
     assert_true io.open?
 
+    io.close
     invoked = false
 
     sftp.file.open('readme.txt') do |file|
