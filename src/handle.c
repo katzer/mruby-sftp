@@ -298,7 +298,7 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
     }
 
     if (chomp && mrb_string_p(res)) {
-        mrb_funcall(mrb, res, "chop!", 0);
+        mrb_funcall(mrb, res, "chomp!", 0);
     }
 
     return res;
