@@ -21,14 +21,10 @@
  * SOFTWARE.
  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "mruby.h"
+
+MRB_BEGIN_DECL
 
 void mrb_mruby_sftp_file_init (mrb_state *mrb);
 
-#ifdef __cplusplus
-}
-#endif
+MRB_END_DECL

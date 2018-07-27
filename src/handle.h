@@ -21,12 +21,10 @@
  * SOFTWARE.
  */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "mruby.h"
 #include <libssh2_sftp.h>
+
+MRB_BEGIN_DECL
 
 struct mrb_sftp_handle
 {
@@ -41,6 +39,4 @@ void mrb_mruby_sftp_handle_init (mrb_state *mrb);
 LIBSSH2_SFTP_HANDLE *mrb_sftp_handle (mrb_state *mrb, mrb_value self);
 LIBSSH2_SFTP_HANDLE *mrb_sftp_handle_bang (mrb_state *mrb, mrb_value self);
 
-#ifdef __cplusplus
-}
-#endif
+MRB_END_DECL

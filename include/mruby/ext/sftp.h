@@ -24,13 +24,11 @@
 #ifndef MRUBY_SFTP_H
 #define MRUBY_SFTP_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "mruby.h"
 #include "mruby/ext/ssh.h"
 #include <libssh2_sftp.h>
+
+MRB_BEGIN_DECL
 
 struct mrb_sftp
 {
@@ -51,12 +49,11 @@ typedef struct mrb_sftp mrb_sftp_t;
 #define E_SFTP_PATH_ERROR             (mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "PathError"))
 #define E_SFTP_NAME_ERROR             (mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "NameError"))
 
-LIBSSH2_SFTP* mrb_sftp_session (mrb_value self);
-mrb_ssh_t* mrb_sftp_ssh_session (mrb_value self);
-void mrb_sftp_raise_last_error (mrb_state *mrb, LIBSSH2_SFTP *sftp, const char* msg);
-void mrb_sftp_raise (mrb_state *mrb, int err, const char* msg);
+MRB_API LIBSSH2_SFTP* mrb_sftp_session (mrb_value self);
+MRB_API mrb_ssh_t* mrb_sftp_ssh_session (mrb_value self);
+MRB_API void mrb_sftp_raise_last_error (mrb_state *mrb, LIBSSH2_SFTP *sftp, const char* msg);
+MRB_API void mrb_sftp_raise (mrb_state *mrb, int err, const char* msg);
 
-#ifdef __cplusplus
-}
-#endif
+MRB_END_DECL
+
 #endif
