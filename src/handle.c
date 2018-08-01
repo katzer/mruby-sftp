@@ -37,7 +37,7 @@
 #include <libssh2_sftp.h>
 
 #if MRUBY_RELEASE_NO < 10400
-static mrb_int
+static inline mrb_int
 mrb_str_index(mrb_state *mrb, mrb_value str, const char *lit, mrb_int len, mrb_int off)
 {
     mrb_value pos = mrb_funcall(mrb, str, "index", 2, mrb_str_new_static(mrb, lit, len), mrb_fixnum_value(off));
@@ -73,21 +73,21 @@ mrb_sftp_handle_free (mrb_state *mrb, void *p)
 
 static mrb_data_type const mrb_sftp_handle_type = { "SFTP::Handle", mrb_sftp_handle_free };
 
-LIBSSH2_SFTP_HANDLE *
+inline LIBSSH2_SFTP_HANDLE *
 mrb_sftp_handle (mrb_state *mrb, mrb_value self)
 {
     mrb_sftp_handle_t *data = DATA_PTR(self);
     return data ? data->handle : NULL;
 }
 
-static void
+static inline void
 mrb_sftp_raise_unless_opened (mrb_state *mrb, LIBSSH2_SFTP_HANDLE *handle)
 {
     if (handle && mrb_ssh_initialized()) return;
     mrb_raise(mrb, E_SFTP_HANDLE_CLOSED_ERROR, "SFTP handle not opened.");
 }
 
-LIBSSH2_SFTP_HANDLE *
+inline LIBSSH2_SFTP_HANDLE *
 mrb_sftp_handle_bang (mrb_state *mrb, mrb_value self)
 {
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle(mrb, self);
@@ -95,13 +95,13 @@ mrb_sftp_handle_bang (mrb_state *mrb, mrb_value self)
     return handle;
 }
 
-static int
+static inline int
 mrb_sftp_type (mrb_state *mrb, mrb_value self)
 {
     return mrb_fixnum(mrb_attr_get(mrb, self, SYM_TYPE));
 }
 
-static const char*
+static inline const char*
 mrb_sftp_path (mrb_state *mrb, mrb_value self, int *len)
 {
     mrb_value path = mrb_iv_get(mrb, self, SYM_PATH);

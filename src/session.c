@@ -53,14 +53,14 @@ mrb_sftp_session_free (mrb_state *mrb, void *p)
 
 static mrb_data_type const mrb_sftp_session_type = { "SFTP::Session", mrb_sftp_session_free };
 
-LIBSSH2_SFTP *
+inline LIBSSH2_SFTP *
 mrb_sftp_session (mrb_value self)
 {
     mrb_sftp_t *data = DATA_PTR(self);
     return (data) ? data->sftp : NULL;
 }
 
-mrb_ssh_t *
+inline mrb_ssh_t *
 mrb_sftp_ssh_session (mrb_value self)
 {
     mrb_sftp_t *data = DATA_PTR(self);

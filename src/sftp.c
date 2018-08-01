@@ -33,7 +33,7 @@
 
 #include <libssh2_sftp.h>
 
-void
+inline void
 mrb_sftp_raise_last_error (mrb_state *mrb, LIBSSH2_SFTP *sftp, const char* msg)
 {
     int err = libssh2_sftp_last_error(sftp);
@@ -41,7 +41,7 @@ mrb_sftp_raise_last_error (mrb_state *mrb, LIBSSH2_SFTP *sftp, const char* msg)
     mrb_sftp_raise(mrb, err, msg);
 }
 
-void
+inline void
 mrb_sftp_raise (mrb_state *mrb, int err, const char* msg)
 {
     struct RClass *c;
