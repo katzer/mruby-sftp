@@ -22,8 +22,14 @@
 
 assert 'SFTP::Stat' do
   assert_kind_of Class, SFTP::Stat
-  assert_include SFTP::Stat.constants, :T_DIRECTORY
-  assert_include SFTP::Stat.constants, :T_REGULAR
+  assert_kind_of Integer, SFTP::Stat::T_SOCKET
+  assert_kind_of Integer, SFTP::Stat::T_SYMLINK
+  assert_kind_of Integer, SFTP::Stat::T_REGULAR
+  assert_kind_of Integer, SFTP::Stat::T_BLOCK_DEVICE
+  assert_kind_of Integer, SFTP::Stat::T_DIRECTORY
+  assert_kind_of Integer, SFTP::Stat::T_CHAR_DEVICE
+  assert_kind_of Integer, SFTP::Stat::T_FIFO
+  assert_kind_of Integer, SFTP::Stat::T_UNKNOWN
 end
 
 assert 'SFTP::Stat#initialize' do
@@ -173,16 +179,6 @@ assert 'SFTP::Stat#symlink?' do
   assert_false stats.symlink?
   stats.mode = 0o0
   assert_nil stats.symlink?
-end
-
-assert 'SFTP::Stat#zero?' do
-  stats = SFTP::Stat.new
-
-  assert_true stats.zero?
-  stats.instance_variable_set :@size, 240
-  assert_false stats.zero?
-  stats.instance_variable_set :@size, 0
-  assert_true stats.zero?
 end
 
 assert 'SFTP::Stat#readable?' do

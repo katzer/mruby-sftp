@@ -25,7 +25,7 @@ assert 'SFTP' do
 end
 
 assert 'SFTP.start' do
-  assert_include SFTP.public_methods, :start
+  assert_kind_of SFTP::Session, SFTP.start
 end
 
 assert 'SFTP::Exception' do
