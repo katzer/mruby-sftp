@@ -1,4 +1,4 @@
-# SFTP client for mruby <br> [![Build Status](https://travis-ci.org/katzer/mruby-sftp.svg?branch=master)](https://travis-ci.org/katzer/mruby-sftp) [![Build status](https://ci.appveyor.com/api/projects/status/pggp2jp2287ogqjm/branch/master?svg=true)](https://ci.appveyor.com/project/katzer/mruby-sftp/branch/master) [![codebeat badge](https://codebeat.co/badges/6314e973-d325-4366-a227-48e2023db7c2)](https://codebeat.co/projects/github-com-katzer-mruby-sftp-master)
+# SFTP client for mruby <br> [![Build Status](https://travis-ci.com/katzer/mruby-sftp.svg?branch=master)](https://travis-ci.com/katzer/mruby-sftp) [![Build status](https://ci.appveyor.com/api/projects/status/pggp2jp2287ogqjm/branch/master?svg=true)](https://ci.appveyor.com/project/katzer/mruby-sftp/branch/master) [![codebeat badge](https://codebeat.co/badges/6314e973-d325-4366-a227-48e2023db7c2)](https://codebeat.co/projects/github-com-katzer-mruby-sftp-master)
 
 Inspired by [Net::SFTP][net_sftp], empowers [mruby][mruby], a work in progress!
 
@@ -204,7 +204,7 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/katzer
 
 The mgem is available as open source under the terms of the [MIT License][license].
 
-Made with :yum: from Leipzig
+Made with :yum: in Leipzig
 
 © 2017 [appPlant GmbH][appplant]
 
