@@ -46,7 +46,7 @@ module SFTP
       io = Handle.new(@session, path)
       io.open_dir || loop { break unless (item = io.gets) && yield(item) }
     ensure
-      io.close if io
+      io&.close
     end
 
     # To be enumerable
