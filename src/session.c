@@ -88,7 +88,7 @@ mrb_sftp_stat (mrb_state *mrb, mrb_value self, LIBSSH2_SFTP_ATTRIBUTES *attrs, i
     mrb_get_args(mrb, "o", &obj);
 
     if (mrb_string_p(obj)) {
-        while ((ret = libssh2_sftp_stat_ex(sftp, RSTRING_PTR(obj), RSTRING_LEN(obj), type, attrs)) == LIBSSH2_ERROR_EAGAIN);
+        while ((ret = libssh2_sftp_stat_ex(sftp, RSTRING_PTR(obj), RSTRING_LEN(obj), type, attrs)) == LIBSSH2SFTP_EAGAIN);
         goto done;
     }
 
@@ -98,7 +98,7 @@ mrb_sftp_stat (mrb_state *mrb, mrb_value self, LIBSSH2_SFTP_ATTRIBUTES *attrs, i
         mrb_raise(mrb, E_SFTP_HANDLE_CLOSED_ERROR, "SFTP handle not opened.");
     }
 
-    while ((ret = libssh2_sftp_fstat(handle, attrs)) == LIBSSH2_ERROR_EAGAIN);
+    while ((ret = libssh2_sftp_fstat(handle, attrs)) == LIBSSH2SFTP_EAGAIN);
 
   done:
 
@@ -182,7 +182,7 @@ mrb_sftp_f_rpath (mrb_state *mrb, mrb_value self)
 
     mrb_get_args(mrb, "s", &path, &len);
 
-    while (libssh2_sftp_symlink_ex(sftp, path, len, rpath, 256, LIBSSH2_SFTP_REALPATH) == LIBSSH2_ERROR_EAGAIN);
+    while (libssh2_sftp_symlink_ex(sftp, path, len, rpath, 256, LIBSSH2_SFTP_REALPATH) == LIBSSH2SFTP_EAGAIN);
 
     return mrb_str_new_cstr(mrb, rpath);
 }
@@ -230,7 +230,7 @@ mrb_sftp_f_setstat (mrb_state *mrb, mrb_value self)
 
     mrb_sftp_hash_to_stat(mrb, opts, &attrs);
 
-    while ((ret = libssh2_sftp_stat_ex(sftp, path, path_len, LIBSSH2_SFTP_SETSTAT, &attrs)) == LIBSSH2_ERROR_EAGAIN);
+    while ((ret = libssh2_sftp_stat_ex(sftp, path, path_len, LIBSSH2_SFTP_SETSTAT, &attrs)) == LIBSSH2SFTP_EAGAIN);
 
     if (ret != 0) {
         mrb_sftp_raise_last_error(mrb, sftp, "Failed to set the stats as specified.");
@@ -252,7 +252,7 @@ mrb_sftp_f_rename (mrb_state *mrb, mrb_value self)
 
     mrb_get_args(mrb, "ss|i", &source, &source_len, &dest, &dest_len, &flags);
 
-    while ((ret = libssh2_sftp_rename_ex(sftp, source, source_len, dest, dest_len, flags)) == LIBSSH2_ERROR_EAGAIN);
+    while ((ret = libssh2_sftp_rename_ex(sftp, source, source_len, dest, dest_len, flags)) == LIBSSH2SFTP_EAGAIN);
 
     if (ret != 0) {
         mrb_sftp_raise_last_error(mrb, sftp, "Failed to rename the file or dir as specified.");
@@ -274,7 +274,7 @@ mrb_sftp_f_symlink (mrb_state *mrb, mrb_value self)
 
     mrb_get_args(mrb, "ss", &path, &path_len, &target, &target_len);
 
-    while ((ret = libssh2_sftp_symlink_ex(sftp, path, path_len, target, target_len, LIBSSH2_SFTP_SYMLINK)) == LIBSSH2_ERROR_EAGAIN);
+    while ((ret = libssh2_sftp_symlink_ex(sftp, path, path_len, target, target_len, LIBSSH2_SFTP_SYMLINK)) == LIBSSH2SFTP_EAGAIN);
 
     if (ret != 0) {
         mrb_sftp_raise_last_error(mrb, sftp, "Failed to create the symlink specified.");
@@ -295,7 +295,7 @@ mrb_sftp_f_rmdir (mrb_state *mrb, mrb_value self)
 
     mrb_get_args(mrb, "s", &path, &path_len);
 
-    while ((ret = libssh2_sftp_rmdir_ex(sftp, path, path_len)) == LIBSSH2_ERROR_EAGAIN);
+    while ((ret = libssh2_sftp_rmdir_ex(sftp, path, path_len)) == LIBSSH2SFTP_EAGAIN);
 
     if (ret != 0) {
         mrb_sftp_raise_last_error(mrb, sftp, "Failed to remove the dir specified.");
@@ -316,7 +316,7 @@ mrb_sftp_f_mkdir (mrb_state *mrb, mrb_value self)
 
     mrb_get_args(mrb, "s|i", &path, &path_len, &mode);
 
-    while ((ret = libssh2_sftp_mkdir_ex(sftp, path, path_len, mode)) == LIBSSH2_ERROR_EAGAIN);
+    while ((ret = libssh2_sftp_mkdir_ex(sftp, path, path_len, mode)) == LIBSSH2SFTP_EAGAIN);
 
     if (ret != 0) {
         mrb_sftp_raise_last_error(mrb, sftp, "Failed to create the dir specified.");
@@ -337,7 +337,7 @@ mrb_sftp_f_delete (mrb_state *mrb, mrb_value self)
 
     mrb_get_args(mrb, "s", &path, &path_len);
 
-    while ((ret = libssh2_sftp_unlink_ex(sftp, path, path_len)) == LIBSSH2_ERROR_EAGAIN);
+    while ((ret = libssh2_sftp_unlink_ex(sftp, path, path_len)) == LIBSSH2SFTP_EAGAIN);
 
     if (ret != 0) {
         mrb_sftp_raise_last_error(mrb, sftp, "Failed to delete the file specified.");

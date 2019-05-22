@@ -143,7 +143,7 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
 
         err = libssh2_session_last_errno(ssh->session);
 
-        if (err == LIBSSH2_ERROR_EAGAIN)
+        if (err == LIBSSH2SFTP_EAGAIN)
         {
             mrb_ssh_wait_socket(ssh);
         }
@@ -178,7 +178,7 @@ mrb_sftp_f_gets_dir (mrb_state *mrb, mrb_value self)
     mrb_value args[3];
     int rc;
 
-    while ((rc = libssh2_sftp_readdir_ex(handle, entry, 256, longentry, 512, &attrs)) == LIBSSH2_ERROR_EAGAIN) {
+    while ((rc = libssh2_sftp_readdir_ex(handle, entry, 256, longentry, 512, &attrs)) == LIBSSH2SFTP_EAGAIN) {
         mrb_ssh_wait_socket(ssh);
     }
 
@@ -250,7 +250,7 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
 
   read:
 
-    while ((rc = libssh2_sftp_read(handle, mem, mem_size)) == LIBSSH2_ERROR_EAGAIN) {
+    while ((rc = libssh2_sftp_read(handle, mem, mem_size)) == LIBSSH2SFTP_EAGAIN) {
         mrb_ssh_wait_socket(ssh);
     };
 
@@ -377,7 +377,7 @@ mrb_sftp_f_seek (mrb_state *mrb, mrb_value self)
         offset += libssh2_sftp_tell64(handle);
     } else
     if (whence == SYM_END) {
-        while (libssh2_sftp_fstat(handle, &attrs) == LIBSSH2_ERROR_EAGAIN);
+        while (libssh2_sftp_fstat(handle, &attrs) == LIBSSH2SFTP_EAGAIN);
         offset += attrs.filesize;
     } else
     if (whence != SYM_SET) {
@@ -425,7 +425,7 @@ mrb_sftp_f_sync (mrb_state *mrb, mrb_value self)
     mrb_value session;
     int ret;
 
-    while ((ret = libssh2_sftp_fsync(handle)) == LIBSSH2_ERROR_EAGAIN);
+    while ((ret = libssh2_sftp_fsync(handle)) == LIBSSH2SFTP_EAGAIN);
 
     if (ret != 0) {
         session = mrb_attr_get(mrb, self, SYM_SESSION);

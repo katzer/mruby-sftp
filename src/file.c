@@ -62,7 +62,7 @@ mrb_sftp_f_download (mrb_state *mrb, mrb_value self)
 
   read:
 
-    while ((rc = libssh2_sftp_read(handle, mem, mem_size)) == LIBSSH2_ERROR_EAGAIN) {
+    while ((rc = libssh2_sftp_read(handle, mem, mem_size)) == LIBSSH2SFTP_EAGAIN) {
         mrb_ssh_wait_socket(ssh);
     }
 
@@ -117,7 +117,7 @@ mrb_sftp_f_upload (mrb_state *mrb, mrb_value self)
     fread(mem, sizeof(char), mem_size, file);
     fclose(file);
 
-    while (libssh2_sftp_write(handle, mem, mem_size) == LIBSSH2_ERROR_EAGAIN) {
+    while (libssh2_sftp_write(handle, mem, mem_size) == LIBSSH2SFTP_EAGAIN) {
         mrb_ssh_wait_socket(ssh);
     }
 
@@ -144,7 +144,7 @@ mrb_sftp_f_write (mrb_state *mrb, mrb_value self)
 
     mrb_get_args(mrb, "s", &buf, &len);
 
-    while (libssh2_sftp_write(handle, buf, len) == LIBSSH2_ERROR_EAGAIN) {
+    while (libssh2_sftp_write(handle, buf, len) == LIBSSH2SFTP_EAGAIN) {
         mrb_ssh_wait_socket(ssh);
     }
 
