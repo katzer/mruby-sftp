@@ -136,12 +136,10 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
     file.close
     assert_raise(SFTP::HandleNotOpened) { file.sync }
 
-    begin
-      file.open
-      file.sync
-    rescue SFTP::Unsupported => e
-      skip(e)
-    end
+    file.open
+    file.sync
+  rescue SFTP::Unsupported => e
+    skip(e)
   end
 
   file.close

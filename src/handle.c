@@ -36,6 +36,8 @@
 #include <string.h>
 #include <libssh2_sftp.h>
 
+#define SYM(name, len) mrb_intern_static(mrb, name, len)
+
 #if MRUBY_RELEASE_NO < 10400
 static inline mrb_int
 mrb_str_index(mrb_state *mrb, mrb_value str, const char *lit, mrb_int len, mrb_int off)
@@ -44,16 +46,6 @@ mrb_str_index(mrb_state *mrb, mrb_value str, const char *lit, mrb_int len, mrb_i
     return mrb_nil_p(pos) ? -1 : mrb_fixnum(pos);
 }
 #endif
-
-static mrb_sym SYM_EOF;
-static mrb_sym SYM_BUF;
-static mrb_sym SYM_CUR;
-static mrb_sym SYM_SET;
-static mrb_sym SYM_END;
-static mrb_sym SYM_TYPE;
-static mrb_sym SYM_PATH;
-static mrb_value KEY_CHOMP;
-static mrb_sym SYM_SESSION;
 
 static void
 mrb_sftp_handle_free (mrb_state *mrb, void *p)
@@ -98,13 +90,13 @@ mrb_sftp_handle_bang (mrb_state *mrb, mrb_value self)
 static inline int
 mrb_sftp_type (mrb_state *mrb, mrb_value self)
 {
-    return mrb_fixnum(mrb_attr_get(mrb, self, SYM_TYPE));
+    return mrb_fixnum(mrb_attr_get(mrb, self, SYM("type", 4)));
 }
 
 static inline const char*
 mrb_sftp_path (mrb_state *mrb, mrb_value self, int *len)
 {
-    mrb_value path = mrb_iv_get(mrb, self, SYM_PATH);
+    mrb_value path = mrb_iv_get(mrb, self, SYM("@path", 5));
 
     if (len) {
         *len = mrb_string_value_len(mrb, path);
@@ -127,7 +119,7 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
 
     if (DATA_PTR(self)) return;
 
-    session = mrb_attr_get(mrb, self, SYM_SESSION);
+    session = mrb_attr_get(mrb, self, SYM("@session", 8));
     ssh     = mrb_sftp_ssh_session(session);
     sftp    = mrb_sftp_session(session);
     path    = mrb_sftp_path(mrb, self, &len);
@@ -163,13 +155,13 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
 
     mrb_data_init(self, data, &mrb_sftp_handle_type);
 
-    mrb_iv_set(mrb, self, SYM_TYPE, mrb_fixnum_value(type));
+    mrb_iv_set(mrb, self, SYM("type", 4), mrb_fixnum_value(type));
 }
 
 static mrb_value
 mrb_sftp_f_gets_dir (mrb_state *mrb, mrb_value self)
 {
-    mrb_value session           = mrb_attr_get(mrb, self, SYM_SESSION);
+    mrb_value session           = mrb_attr_get(mrb, self, SYM("@session", 8));
     mrb_ssh_t *ssh              = mrb_sftp_ssh_session(session);
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle_bang(mrb, self);
     struct RClass *cls          = mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "Entry");
@@ -195,20 +187,25 @@ mrb_sftp_f_gets_dir (mrb_state *mrb, mrb_value self)
 static mrb_value
 mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
 {
-    mrb_value session             = mrb_attr_get(mrb, self, SYM_SESSION);
-    mrb_ssh_t *ssh                = mrb_sftp_ssh_session(session);
-    LIBSSH2_SFTP_HANDLE *handle   = mrb_sftp_handle_bang(mrb, self);
-    mrb_value arg, opts, res, buf = mrb_attr_get(mrb, self, SYM_BUF);
-    mrb_bool arg_given = FALSE, mem_size_given = FALSE;
-    unsigned int mem_size = 256, sep_len = 0;
-    int rc, pos, chomp = FALSE;
-    const char *sep = NULL;
-    char *mem = NULL;
+    mrb_value session           = mrb_attr_get(mrb, self, SYM("@session", 8));
+    mrb_ssh_t *ssh              = mrb_sftp_ssh_session(session);
+    LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle_bang(mrb, self);
+    mrb_value buf               = mrb_attr_get(mrb, self, SYM("buf", 3));
+    mrb_bool arg_given          = FALSE;
+    mrb_bool opts_given         = FALSE;
+    mrb_bool mem_size_given     = FALSE;
+    const char *sep             = NULL;
+    char *mem                   = NULL;
+    unsigned int mem_size       = 256;
+    unsigned int sep_len        = 0;
+    int chomp                   = FALSE;
+    mrb_value arg, opts, res;
+    int rc, pos;
 
-    mrb_get_args(mrb, "|o?H!", &arg, &arg_given, &opts);
+    mrb_get_args(mrb, "|o?H!?", &arg, &arg_given, &opts, &opts_given);
 
-    if (mrb_hash_p(opts)) {
-        chomp = mrb_type(mrb_hash_get(mrb, opts, KEY_CHOMP)) == MRB_TT_TRUE;
+    if (opts_given && mrb_hash_p(opts)) {
+        chomp = mrb_type(mrb_hash_get(mrb, opts, mrb_symbol_value(SYM("chomp", 5)))) == MRB_TT_TRUE;
     }
 
     if (mrb_string_p(arg)) {
@@ -218,7 +215,7 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
     if (mrb_hash_p(arg)) {
         sep     = "\n";
         sep_len = 1;
-        chomp   = mrb_type(mrb_hash_get(mrb, arg, KEY_CHOMP)) == MRB_TT_TRUE;
+        chomp   = mrb_type(mrb_hash_get(mrb, arg, mrb_symbol_value(SYM("chomp", 5)))) == MRB_TT_TRUE;
     } else
     if (arg_given && mrb_fixnum_p(arg)) {
         mem_size       = mrb_fixnum(arg);
@@ -255,8 +252,8 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
     };
 
     if (rc <= 0) {
-        mrb_iv_set(mrb, self, SYM_EOF, mrb_true_value());
-        mrb_iv_remove(mrb, self, SYM_BUF);
+        mrb_iv_set(mrb, self, SYM("eof", 3), mrb_true_value());
+        mrb_iv_remove(mrb, self, SYM("buf", 3));
         res = buf;
         goto chomp;
     }
@@ -271,7 +268,7 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
         goto read;
 
     if (!sep) {
-        mrb_iv_remove(mrb, self, SYM_BUF);
+        mrb_iv_remove(mrb, self, SYM("buf", 3));
         res = buf;
         goto chomp;
     }
@@ -285,7 +282,7 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
     res = mrb_str_new(mrb, RSTRING_PTR(buf), pos);
     buf = mrb_str_substr(mrb, buf, pos, RSTRING_LEN(buf) - pos);
 
-    mrb_iv_set(mrb, self, SYM_BUF, buf);
+    mrb_iv_set(mrb, self, SYM("buf", 3), buf);
 
   chomp:
 
@@ -351,7 +348,7 @@ static mrb_value
 mrb_sftp_f_pos (mrb_state *mrb, mrb_value self)
 {
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle_bang(mrb, self);
-    mrb_value buf               = mrb_attr_get(mrb, self, SYM_BUF);
+    mrb_value buf               = mrb_attr_get(mrb, self, SYM("buf", 3));
     libssh2_uint64_t pos;
 
     pos = libssh2_sftp_tell64(handle);
@@ -368,19 +365,19 @@ mrb_sftp_f_seek (mrb_state *mrb, mrb_value self)
 {
     LIBSSH2_SFTP_HANDLE *handle = mrb_sftp_handle_bang(mrb, self);
     mrb_int offset              = 0;
-    mrb_sym whence              = SYM_SET;
+    mrb_sym whence              = SYM("SET", 3);
     LIBSSH2_SFTP_ATTRIBUTES attrs;
 
     mrb_get_args(mrb, "i|n", &offset, &whence);
 
-    if (whence == SYM_CUR) {
+    if (whence == SYM("CUR", 3)) {
         offset += libssh2_sftp_tell64(handle);
     } else
-    if (whence == SYM_END) {
+    if (whence == SYM("END", 3)) {
         while (libssh2_sftp_fstat(handle, &attrs) == LIBSSH2SFTP_EAGAIN);
         offset += attrs.filesize;
     } else
-    if (whence != SYM_SET) {
+    if (whence != SYM("SET", 3)) {
         mrb_raise(mrb, E_SFTP_ERROR, "Unknown seek option for SFTP handle.");
     }
 
@@ -390,8 +387,8 @@ mrb_sftp_f_seek (mrb_state *mrb, mrb_value self)
 
     libssh2_sftp_seek64(handle, offset);
 
-    mrb_iv_remove(mrb, self, SYM_EOF);
-    mrb_iv_remove(mrb, self, SYM_BUF);
+    mrb_iv_remove(mrb, self, SYM("eof", 3));
+    mrb_iv_remove(mrb, self, SYM("buf", 3));
 
     return mrb_fixnum_value(libssh2_sftp_tell64(handle));
 }
@@ -410,7 +407,7 @@ mrb_sftp_f_gets (mrb_state *mrb, mrb_value self)
 static mrb_value
 mrb_sftp_f_eof (mrb_state *mrb, mrb_value self)
 {
-    mrb_value eof = mrb_attr_get(mrb, self, SYM_EOF);
+    mrb_value eof = mrb_attr_get(mrb, self, SYM("eof", 3));
 
     mrb_sftp_handle_bang(mrb, self);
 
@@ -428,14 +425,14 @@ mrb_sftp_f_sync (mrb_state *mrb, mrb_value self)
     while ((ret = libssh2_sftp_fsync(handle)) == LIBSSH2SFTP_EAGAIN);
 
     if (ret != 0) {
-        session = mrb_attr_get(mrb, self, SYM_SESSION);
+        session = mrb_attr_get(mrb, self, SYM("@session", 8));
         sftp    = mrb_sftp_session(session);
 
         mrb_sftp_raise_last_error(mrb, sftp, "Cannot sync the SFTP handle.");
     }
 
-    mrb_iv_remove(mrb, self, SYM_EOF);
-    mrb_iv_remove(mrb, self, SYM_BUF);
+    mrb_iv_remove(mrb, self, SYM("eof", 3));
+    mrb_iv_remove(mrb, self, SYM("buf", 3));
 
     return mrb_nil_value();
 }
@@ -448,8 +445,8 @@ mrb_sftp_f_close (mrb_state *mrb, mrb_value self)
     DATA_PTR(self)  = NULL;
     DATA_TYPE(self) = NULL;
 
-    mrb_iv_remove(mrb, self, SYM_EOF);
-    mrb_iv_remove(mrb, self, SYM_BUF);
+    mrb_iv_remove(mrb, self, SYM("eof", 3));
+    mrb_iv_remove(mrb, self, SYM("buf", 3));
 
     return mrb_nil_value();
 }
@@ -474,16 +471,6 @@ mrb_mruby_sftp_handle_init (mrb_state *mrb)
     cls = mrb_define_class_under(mrb, ftp, "Handle", mrb->object_class);
 
     MRB_SET_INSTANCE_TT(cls, MRB_TT_DATA);
-
-    SYM_CUR     = mrb_intern_static(mrb, "CUR", 3);
-    SYM_SET     = mrb_intern_static(mrb, "SET", 3);
-    SYM_END     = mrb_intern_static(mrb, "END", 3);
-    SYM_EOF     = mrb_intern_static(mrb, "eof", 3);
-    SYM_BUF     = mrb_intern_static(mrb, "buf", 3);
-    SYM_TYPE    = mrb_intern_static(mrb, "type", 4);
-    KEY_CHOMP   = mrb_symbol_value(mrb_intern_static(mrb, "chomp", 5));
-    SYM_PATH    = mrb_intern_static(mrb, "@path", 5);
-    SYM_SESSION = mrb_intern_static(mrb, "@session", 8);
 
     mrb_define_method(mrb, cls, "open_dir", mrb_sftp_f_open_dir, MRB_ARGS_NONE());
     mrb_define_method(mrb, cls, "open_file",mrb_sftp_f_open_file, MRB_ARGS_OPT(2));
