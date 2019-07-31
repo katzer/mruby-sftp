@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 AllCops:
-  TargetRubyVersion: 2.4
+  TargetRubyVersion: 2.5
 
 Style/ParallelAssignment:
   Enabled: false
