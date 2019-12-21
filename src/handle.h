@@ -26,13 +26,11 @@
 
 MRB_BEGIN_DECL
 
-struct mrb_sftp_handle
+typedef struct mrb_sftp_handle
 {
     struct RData *session;
     LIBSSH2_SFTP_HANDLE *handle;
-};
-
-typedef struct mrb_sftp_handle mrb_sftp_handle_t;
+} mrb_sftp_handle_t;
 
 void mrb_mruby_sftp_handle_init (mrb_state *mrb);
 

@@ -45,7 +45,9 @@ mrb_sftp_session_free (mrb_state *mrb, void *p)
     data = (mrb_sftp_t *)p;
 
     if (data->sftp && data->session->data && mrb_ssh_initialized()) {
-        libssh2_sftp_shutdown(data->sftp);
+        while (libssh2_sftp_shutdown(data->sftp) == LIBSSH2_ERROR_EAGAIN) {
+            mrb_ssh_wait_sock((mrb_ssh_t *)data->session->data);
+        };
     }
 
     mrb_free(mrb, data);
@@ -136,7 +138,7 @@ mrb_sftp_f_connect (mrb_state *mrb, mrb_value self)
         if (sftp) break;
 
         if (libssh2_session_last_errno(ssh->session) == LIBSSH2_ERROR_EAGAIN) {
-            mrb_ssh_wait_socket(ssh);
+            mrb_ssh_wait_sock(ssh);
         } else {
             mrb_ssh_raise_last_error(mrb, ssh);
         }

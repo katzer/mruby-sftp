@@ -30,13 +30,11 @@
 
 MRB_BEGIN_DECL
 
-struct mrb_sftp
+typedef struct mrb_sftp
 {
     struct RData *session;
     LIBSSH2_SFTP *sftp;
-};
-
-typedef struct mrb_sftp mrb_sftp_t;
+} mrb_sftp_t;
 
 #define E_SFTP_ERROR                  (mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "Exception"))
 #define E_SFTP_PERM_ERROR             (mrb_class_get_under(mrb, mrb_module_get(mrb, "SFTP"), "PermissionError"))

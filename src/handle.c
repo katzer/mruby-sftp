@@ -137,7 +137,7 @@ mrb_sftp_open (mrb_state *mrb, mrb_value self, long flags, long mode, int type)
 
         if (err == LIBSSH2SFTP_EAGAIN)
         {
-            mrb_ssh_wait_socket(ssh);
+            mrb_ssh_wait_sock(ssh);
         }
         else if (err == LIBSSH2_ERROR_SFTP_PROTOCOL)
         {
@@ -171,7 +171,7 @@ mrb_sftp_f_gets_dir (mrb_state *mrb, mrb_value self)
     int rc;
 
     while ((rc = libssh2_sftp_readdir_ex(handle, entry, 256, longentry, 512, &attrs)) == LIBSSH2SFTP_EAGAIN) {
-        mrb_ssh_wait_socket(ssh);
+        mrb_ssh_wait_sock(ssh);
     }
 
     if (rc <= 0)
@@ -248,7 +248,7 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
   read:
 
     while ((rc = libssh2_sftp_read(handle, mem, mem_size)) == LIBSSH2SFTP_EAGAIN) {
-        mrb_ssh_wait_socket(ssh);
+        mrb_ssh_wait_sock(ssh);
     };
 
     if (rc <= 0) {
