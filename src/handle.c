@@ -208,11 +208,11 @@ mrb_sftp_f_gets_file (mrb_state *mrb, mrb_value self)
         chomp = mrb_type(mrb_hash_get(mrb, opts, mrb_symbol_value(SYM("chomp", 5)))) == MRB_TT_TRUE;
     }
 
-    if (mrb_string_p(arg)) {
+    if (arg_given && mrb_string_p(arg)) {
         sep     = RSTRING_PTR(arg);
         sep_len = RSTRING_LEN(arg);
     } else
-    if (mrb_hash_p(arg)) {
+    if (arg_given && mrb_hash_p(arg)) {
         sep     = "\n";
         sep_len = 1;
         chomp   = mrb_type(mrb_hash_get(mrb, arg, mrb_symbol_value(SYM("chomp", 5)))) == MRB_TT_TRUE;
