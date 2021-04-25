@@ -73,7 +73,7 @@ assert 'SFTP#connect' do
   assert_raise(SSH::NotAuthentificated) { sftp.connect }
   assert_false sftp.connected?
 
-  ssh.login('demo', 'password')
+  ssh.login('demo', password: 'password')
   assert_nothing_raised { sftp.connect }
   assert_true sftp.connected?
 
