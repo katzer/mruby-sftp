@@ -57,7 +57,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
     assert_raise(SFTP::FileError) { sftp.dir.entries 'i am bad' }
     assert_raise(SFTP::FileError) { sftp.dir.entries 'i/am/bad' }
     assert_raise(SFTP::FileError) { sftp.dir.entries 'readme.txt' }
-    assert_equal 5, sftp.dir.entries('/').size
+    assert_equal 4, sftp.dir.entries('/').size
     assert_include sftp.dir.entries('/').map! { |e| e.name }, 'readme.txt'
   end
 end

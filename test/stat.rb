@@ -207,7 +207,7 @@ assert 'SFTP::Stat', 'SFTP' do
     file = sftp.stat('readme.txt')
     assert_true file.file?
     assert_equal 600, file.umode
-    assert_equal 403, file.size
+    assert_equal 405, file.size
     assert_true file.readable?
     assert_true file.writable?
     assert_false file.executable?
