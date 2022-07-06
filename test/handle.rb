@@ -124,7 +124,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |ftp|
     file.open_file
     file.rewind
 
-    assert_raise(TypeError) { file.gets(1.5) }
+    assert_raise(TypeError) { file.gets(1.5) } if Object.const_defined? :Float
 
     assert_equal 10, file.gets(10).size
     assert_equal 10, file.pos

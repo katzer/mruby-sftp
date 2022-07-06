@@ -63,7 +63,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
   assert 'SFTP::File#read' do
     assert_raise(SFTP::HandleNotOpened) { dummy.read }
     assert_raise(TypeError) { dummy.read("\n") }
-    assert_raise(TypeError) { file.read(1.5) }
+    assert_raise(TypeError) { file.read(1.5) } if Object.const_defined? :Float
 
     file.open
     file.rewind
@@ -112,7 +112,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
 
   assert 'SFTP::File#readlines' do
     assert_raise(SFTP::HandleNotOpened) { dummy.readlines }
-    assert_raise(TypeError) { file.readlines(1.5) }
+    assert_raise(TypeError) { file.readlines(1.5) } if Object.const_defined? :Float
 
     file.open
 
