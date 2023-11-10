@@ -39,7 +39,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
       assert_equal "\n", line[-1]
     end
 
-    assert_equal 10, called
+    assert_equal 11, called
 
     file.each(chomp: true) do |line|
       called += 1
@@ -47,7 +47,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
       assert_not_equal "\n", line[-1]
     end
 
-    assert_equal 20, called
+    assert_equal 22, called
   end
 
   assert 'SFTP::File#getc' do
@@ -121,14 +121,14 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
 
     assert_kind_of Array, lines
     assert_equal "\n", lines[0][-1]
-    assert_equal 10, lines.size
+    assert_equal 11, lines.size
     assert_kind_of String, lines.last
 
     file.rewind
     lines = file.readlines(chomp: true)
     assert_kind_of Array, lines
     assert_not_equal "\n", lines[0][-1]
-    assert_equal 10, lines.size
+    assert_equal 11, lines.size
     assert_kind_of String, lines.last
   end
 
