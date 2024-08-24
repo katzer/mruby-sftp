@@ -138,7 +138,7 @@ SFTP.start('test.rebex.net', 'demo', password: 'password') do |sftp|
 
     file.open
     file.sync
-  rescue SFTP::Unsupported => e
+  rescue SFTP::PermissionError => e
     skip(e)
   end
 
